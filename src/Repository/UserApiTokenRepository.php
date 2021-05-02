@@ -1,0 +1,85 @@
+<?php
+
+namespace App\Repository;
+
+use App\Entity\UserApiToken;
+use App\Entity\User;
+use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\ORMException;
+use Doctrine\Persistence\ManagerRegistry;
+
+/**
+ * @method UserApiToken|null find($id, $lockMode = null, $lockVersion = null)
+ * @method UserApiToken|null findOneBy(array $criteria, array $orderBy = null)
+ * @method UserApiToken[]    findAll()
+ * @method UserApiToken[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
+ */
+class UserApiTokenRepository extends ServiceEntityRepository
+{
+    public function __construct(ManagerRegistry $registry)
+    {
+        parent::__construct($registry, UserApiToken::class);
+    }
+
+    public function setToken(User $user, string $type) {
+        try {
+            $apiToken = new UserApiToken($user, $type);
+            $this->getEntityManager()->persist($apiToken);
+            $this->getEntityManager()->flush();
+            return $apiToken;
+        } catch (ORMException $e) {
+            throw new ORMException("ORM Exception... " . $e->getMessage());
+        }
+    }
+
+    public function getLatestToken(User $user) {
+        return $this->createQueryBuilder("api_token")
+            ->select("api_token")
+            ->where("api_token.user = :user")
+            ->andWhere("api_token.expiresAt > :currentDate")
+            ->setParameter("user", $user)
+            ->setParameter("currentDate", new \DateTime())
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
+
+    public function updateTokenExpiry(UserApiToken $apiToken, $expiryDate, string $type) {
+        try {
+            $apiToken->setExpiresAt($expiryDate);
+            $apiToken->setType($type);
+            $this->getEntityManager()->persist($apiToken);
+            $this->getEntityManager()->flush();
+            return $apiToken;
+        } catch (ORMException $e) {
+            throw new ORMException("ORM Exception... " . $e->getMessage());
+        }
+
+    }
+
+    public function deleteUserExpiredTokens(User $user) {
+        $apiTokens = $this->createQueryBuilder("api_token")
+            ->select("api_token")
+            ->where("api_token.user = :user")
+            ->andWhere("api_token.expiresAt < :currentDate")
+            ->andWhere("api_token.type = 'auto'")
+            ->setParameter("user", $user)
+            ->setParameter("currentDate", new \DateTime())
+            ->getQuery()
+            ->getResult();
+        if (count($apiTokens) === 0) {
+            return false;
+        }
+        foreach ($apiTokens as $token) {
+            $this->deleteUserApiToken($token);
+        }
+        return count($apiTokens);
+    }
+
+    public function deleteUserApiToken(UserApiToken $apiToken) {
+        $entityManager = $this->getEntityManager();
+        $entityManager->remove($apiToken);
+        $entityManager->flush();
+        return $apiToken;
+    }
+}
