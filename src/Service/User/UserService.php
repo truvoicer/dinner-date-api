@@ -67,7 +67,7 @@ class UserService extends BaseService
         return $this->userApiTokenRepository->updateTokenExpiry($userApiToken, new \DateTime($data["expires_at"]), "user");
     }
 
-    public function getLatestToken(User $user)
+    public function getLatestToken(User|UserInterface $user)
     {
         return $this->userApiTokenRepository->getLatestToken($user);
     }
@@ -77,7 +77,7 @@ class UserService extends BaseService
         return $this->userApiTokenRepository->findOneBy(["token" => $tokenValue]);
     }
 
-    public function findUserApiTokensByParams(User $user, string $sort, string $order, int $count)
+    public function findUserApiTokensByParams(User|UserInterface $user, string $sort, string $order, int $count)
     {
         return $this->userRepository->findUserApiTokenByParams($user, $sort, $order, $count);
     }

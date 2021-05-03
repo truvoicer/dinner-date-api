@@ -16,12 +16,11 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
  *
  * Require ROLE_ADMIN for *every* controller method in this class.
  *
- * @IsGranted("ROLE_USER")
- *
  * @Route("/api/auth")
  */
 class AuthController extends BaseController
 {
+    private UserService $userService;
 
     /**
      * AuthController constructor.
@@ -37,7 +36,8 @@ class AuthController extends BaseController
         HttpRequestService $httpRequestService
     )
     {
-        parent::__construct($httpRequestService, $serializerService, $userService);
+        parent::__construct($httpRequestService, $serializerService);
+        $this->userService = $userService;
     }
 
     /**
@@ -79,13 +79,12 @@ class AuthController extends BaseController
      */
     public function authTokenValidate(): Response
     {
-        $user = $this->getUser();
-        $apiToken = $this->userService->getLatestToken($user);
+        $apiToken = $this->userService->getLatestToken($this->getUser());
         $data = [
             // you may want to customize or obfuscate the message first
             'message' => 'Successfully logged in.',
             'session' => [
-                "email" => $user->getEmail(),
+                "email" => $this->getUser()->getEmail(),
                 "access_token" => $apiToken->getToken(),
                 "expires_at" => $apiToken->getExpiresAt()->getTimestamp()
             ],

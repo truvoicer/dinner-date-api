@@ -100,11 +100,32 @@
     "doctrine/sql-formatter": {
         "version": "1.1.1"
     },
+    "firebase/php-jwt": {
+        "version": "v5.2.1"
+    },
     "friendsofphp/proxy-manager-lts": {
         "version": "v1.0.3"
     },
     "fzaninotto/faker": {
         "version": "v1.5.0"
+    },
+    "google/apiclient": {
+        "version": "2.0",
+        "recipe": {
+            "repo": "github.com/symfony/recipes-contrib",
+            "branch": "master",
+            "version": "2.0",
+            "ref": "49c5d7a66d863d28513979bf0666dc77599100c0"
+        },
+        "files": [
+            "config/packages/google_apiclient.yaml"
+        ]
+    },
+    "google/apiclient-services": {
+        "version": "v0.173.0"
+    },
+    "google/auth": {
+        "version": "v1.15.1"
     },
     "guzzlehttp/guzzle": {
         "version": "7.3.0"
@@ -133,6 +154,9 @@
     "league/mime-type-detection": {
         "version": "1.7.0"
     },
+    "monolog/monolog": {
+        "version": "2.2.0"
+    },
     "mtdowling/jmespath.php": {
         "version": "2.6.0"
     },
@@ -154,6 +178,12 @@
             "config/packages/oneup_flysystem.yaml"
         ]
     },
+    "paragonie/constant_time_encoding": {
+        "version": "v2.4.0"
+    },
+    "paragonie/random_compat": {
+        "version": "v9.99.100"
+    },
     "phar-io/manifest": {
         "version": "2.0.1"
     },
@@ -168,6 +198,9 @@
     },
     "phpdocumentor/type-resolver": {
         "version": "1.4.0"
+    },
+    "phpseclib/phpseclib": {
+        "version": "3.0.8"
     },
     "phpspec/prophecy": {
         "version": "1.13.0"
