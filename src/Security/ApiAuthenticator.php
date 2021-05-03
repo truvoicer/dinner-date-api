@@ -40,6 +40,7 @@ class ApiAuthenticator extends AbstractAuthenticator
         return $this->securityService->isSupported($request);
     }
 
+
     public function authenticate(Request $request): PassportInterface
     {
         $credentials = $this->securityService->getCredentials($request);
@@ -57,12 +58,14 @@ class ApiAuthenticator extends AbstractAuthenticator
 //        if ($this->passwordEncoder->isPasswordValid($user, $credentials['password'])) {
 //            throw new CustomUserMessageAuthenticationException('No API token provided');
 //        }
-
-        return new Passport(new UserBadge($credentials["email"]), new PasswordCredentials($credentials['password']));
+        $passport = new Passport(new UserBadge($credentials["email"]), new PasswordCredentials($credentials['password']));
+        dd($passport);
+        return $passport;
     }
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
     {
+        dd($request->getUser());
         // on success, let the request continue
         return null;
     }

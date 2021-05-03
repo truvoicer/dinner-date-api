@@ -7,6 +7,7 @@ use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\ORMException;
 use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
  * @method UserApiToken|null find($id, $lockMode = null, $lockVersion = null)
@@ -32,7 +33,7 @@ class UserApiTokenRepository extends ServiceEntityRepository
         }
     }
 
-    public function getLatestToken(User $user) {
+    public function getLatestToken(User|UserInterface $user) {
         return $this->createQueryBuilder("api_token")
             ->select("api_token")
             ->where("api_token.user = :user")

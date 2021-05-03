@@ -22,7 +22,6 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
  */
 class AuthController extends BaseController
 {
-    private UserService $userService;
 
     /**
      * AuthController constructor.
@@ -32,12 +31,13 @@ class AuthController extends BaseController
      * @param SerializerService $serializerService
      * @param HttpRequestService $httpRequestService
      */
-    public function __construct(UserService $userService,
-                                SerializerService $serializerService,
-                                HttpRequestService $httpRequestService)
+    public function __construct(
+        UserService $userService,
+        SerializerService $serializerService,
+        HttpRequestService $httpRequestService
+    )
     {
-        parent::__construct($httpRequestService, $serializerService);
-        $this->userService = $userService;
+        parent::__construct($httpRequestService, $serializerService, $userService);
     }
 
     /**
@@ -113,11 +113,12 @@ class AuthController extends BaseController
      * @param Request $request
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function newToken(Request $request) {
+    public function newToken(Request $request)
+    {
         $requestData = $this->httpRequestService->getRequestData($request, true);
         $user = $this->userService->getUserByEmail($requestData["email"]);
         $setApiToken = $this->userService->setUserApiToken($user, "auto");
-        if(!$setApiToken) {
+        if (!$setApiToken) {
             return $this->jsonResponseFail("Error generating api token");
         }
         return $this->jsonResponseSuccess("Api token", [

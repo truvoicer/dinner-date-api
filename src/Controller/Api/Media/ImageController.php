@@ -1,11 +1,12 @@
 <?php
 
-namespace App\Controller\Api\Member;
+namespace App\Controller\Api\Media;
 
 use App\Controller\Api\BaseController;
 use App\Entity\UserApiToken;
 use App\Entity\User;
 use App\Service\Member\MemberService;
+use App\Service\Tools\FileSystem\Public\PublicMediaInterface;
 use App\Service\Tools\HttpRequestService;
 use App\Service\Tools\SerializerService;
 use App\Service\User\UserService;
@@ -20,11 +21,12 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
  *
  * @IsGranted("ROLE_USER")
  *
- * @Route("/api/member")
+ * @Route("/api/media/image")
  */
-class MemberController extends BaseController
+class ImageController extends BaseController
 {
     private MemberService $memberService;
+    private PublicMediaInterface $publicMediaInterface;
 
     /**
      * AdminController constructor.
@@ -37,30 +39,35 @@ class MemberController extends BaseController
     public function __construct(
         MemberService $memberService,
         SerializerService $serializerService,
-        HttpRequestService $httpRequestService
+        HttpRequestService $httpRequestService,
+        PublicMediaInterface $publicMediaInterface
     )
     {
-
         parent::__construct($httpRequestService, $serializerService);
         $this->memberService = $memberService;
+        $this->publicMediaInterface = $publicMediaInterface;
     }
 
     /**
      * Gets a single user based on the id in the request url
      *
-     * @Route("/list", methods={"GET"})
+     * @Route("/upload", methods={"POST"})
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function getMemberList(Request $request)
+    public function uploadProfileImage()
     {
+        $this->publicMediaInterface->setUser($this->getUser());
+        $upload = $this->publicMediaInterface->mediaUploadHandler();
+        if(!$upload) {
+            return $this->jsonResponseFail(
+                "Error uploading profile picture, try again."
+            );
+        }
         return $this->jsonResponseSuccess(
-            "success",
+            "Successfully uploaded profile picture.",
             $this->serializerService->entityToArray(
-                $this->memberService->getMemberList(
-                    $this->getUser(),
-                    $request->query->all()
-                ),
-                ["members_list"]
+                $upload,
+                ["main"]
             )
         );
     }
@@ -68,19 +75,20 @@ class MemberController extends BaseController
     /**
      * Gets a single user based on the id in the request url
      *
-     * @Route("/detail", methods={"GET"})
+     * @Route("/delete", methods={"POST"})
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function getMemberProfile(Request $request)
+    public function deleteProfileImage()
     {
+        $this->publicMediaInterface->setUser($this->getUser());
+        $delete = $this->publicMediaInterface->mediaDeleteHandler();
+        if(!$delete) {
+            return $this->jsonResponseFail(
+                "Error deleting profile picture, try again."
+            );
+        }
         return $this->jsonResponseSuccess(
-            "success",
-            $this->serializerService->entityToArray(
-                $this->memberService->getMemberList(
-                    $this->getUser(),
-                    $request->query->all()
-                )
-            )
+            "Successfully deleted profile picture."
         );
     }
 

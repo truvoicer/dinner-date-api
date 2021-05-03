@@ -1,8 +1,11 @@
 <?php
 namespace App\Security;
 
+use App\Entity\User;
 use App\Entity\UserApiToken;
+use App\Repository\UserRepository;
 use App\Service\SecurityService;
+use App\Service\User\UserService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -20,11 +23,13 @@ class ApiTokenAuthenticator extends AbstractAuthenticator
 {
     private EntityManagerInterface $em;
     private SecurityService $securityService;
+    private UserRepository $userRepository;
 
     public function __construct(EntityManagerInterface $em, SecurityService $securityService)
     {
         $this->securityService = $securityService;
         $this->em = $em;
+        $this->userRepository = $em->getRepository(User::class);
     }
 
     /**
@@ -52,7 +57,15 @@ class ApiTokenAuthenticator extends AbstractAuthenticator
         if (!$token->isExpired()) {
             throw new CustomUserMessageAuthenticationException("token_expired");
         }
-        return new SelfValidatingPassport(new UserBadge($token->getUser()->getEmail()));
+
+        return new SelfValidatingPassport(
+            new UserBadge(
+                $token->getUser()->getEmail(),
+                function ($userIdentifier) use($token)  {
+                     return $token->getUser();
+                }
+            )
+        );
     }
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response

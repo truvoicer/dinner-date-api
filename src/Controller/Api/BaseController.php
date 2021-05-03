@@ -4,6 +4,7 @@ namespace App\Controller\Api;
 
 use App\Service\Tools\HttpRequestService;
 use App\Service\Tools\SerializerService;
+use App\Service\User\UserService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -19,8 +20,10 @@ class BaseController extends AbstractController
     protected SerializerService $serializerService;
     protected HttpRequestService $httpRequestService;
 
-    public function __construct(HttpRequestService $httpRequestService,
-                                SerializerService $serializerService)
+    public function __construct(
+        HttpRequestService $httpRequestService,
+        SerializerService $serializerService
+    )
     {
         $this->serializerService = $serializerService;
         $this->httpRequestService = $httpRequestService;

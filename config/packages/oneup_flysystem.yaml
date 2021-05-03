@@ -1,0 +1,33 @@
+# Read the documentation: https://github.com/1up-lab/OneupFlysystemBundle
+oneup_flysystem:
+    adapters:
+        public_adapter:
+            local:
+                location: '%kernel.project_dir%/var/public'
+#                visibilityConverter:
+#                    file:
+#                        public: 0777
+#                        private: 0700
+#                    dir:
+#                        public: 0777
+#                        private: 0700
+
+        temp_adapter:
+            local:
+                location: '%kernel.project_dir%/var/temp'
+        acme.flysystem_adapter:
+            awss3v3:
+                client: acme.s3_client
+                bucket: dinner-date-media-public
+                options:
+                    ACL: bucket-owner-full-control
+    filesystems:
+        public_filesystem:
+            adapter: public_adapter
+            alias: League\Flysystem\Filesystem
+        temp_filesystem:
+            adapter: temp_adapter
+            alias: League\Flysystem\Filesystem
+        s3_filesystem:
+            adapter: acme.flysystem_adapter
+            alias: League\Flysystem\Filesystem

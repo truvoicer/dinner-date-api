@@ -13,6 +13,13 @@ services:
         autowire: true      # Automatically injects dependencies in your services.
         autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
 
+        bind:
+            $publicFilesystem: '@oneup_flysystem.public_filesystem_filesystem'
+            $tempFilesystem: '@oneup_flysystem.temp_filesystem_filesystem'
+            $s3Filesystem: '@oneup_flysystem.s3_filesystem_filesystem'
+            $projectDir: '%kernel.project_dir%'
+            $publicDir: '%kernel.project_dir%/var/public'
+            $tempDir: '%kernel.project_dir%/var/temp'
     # makes classes in src/ available to be used as services
     # this creates a service per class whose id is the fully-qualified class name
     App\:
@@ -29,5 +36,20 @@ services:
         resource: '../src/Controller/'
         tags: ['controller.service_arguments']
 
-    # add more service definitions when explicit configuration is needed
-    # please note that last definitions always *replace* previous ones
+    App\EventListener\ExceptionListener:
+        tags:
+            - { name: kernel.event_listener, event: kernel.exception }
+
+    App\Service\Tools\FileSystem\Public\PublicMediaInterface:
+        tags: ['@request_stack']
+
+    acme.s3_client:
+        class: Aws\S3\S3Client
+        public: true
+        arguments:
+            -
+                version: '2006-03-01' # or 'latest'
+                region: "eu-west-2" # 'eu-central-1' for example
+                credentials:
+                    key: "AKIA5YIMOI3LDVIULEF7"
+                    secret: "Y2ddaafFQZKnxH0gXC+MeAB1OYdPTlqGseV6nk+M"

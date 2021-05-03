@@ -14,7 +14,7 @@ class HttpRequestService
         $this->validator = $validator;
     }
 
-    public function getRequestData(Request $request, $array = false) {
+    public static function getRequestData(Request $request, $array = false) {
         if ($request->getContentType() == "json") {
             return json_decode($request->getContent(), $array);
         }
