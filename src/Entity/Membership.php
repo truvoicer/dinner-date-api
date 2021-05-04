@@ -17,19 +17,19 @@ class Membership
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
-     * @Groups({"members_list"})
+     * @Groups({"members_list", "single"})
      */
     private $id;
 
     /**
      * @ORM\Column(type="string", length=255)
-     * @Groups({"members_list"})
+     * @Groups({"members_list", "single"})
      */
     private $name;
 
     /**
      * @ORM\Column(type="string", length=255)
-     * @Groups({"members_list"})
+     * @Groups({"members_list", "single"})
      */
     private $display_name;
 

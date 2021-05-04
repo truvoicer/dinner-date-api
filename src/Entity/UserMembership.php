@@ -15,7 +15,7 @@ class UserMembership
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
-     * @Groups({"members_list"})
+     * @Groups({"members_list", "single"})
      */
     private $id;
 
@@ -29,7 +29,7 @@ class UserMembership
     /**
      * @ORM\ManyToOne(targetEntity=Membership::class, inversedBy="userMemberships")
      * @ORM\JoinColumn(nullable=false)
-     * @Groups({"members_list"})
+     * @Groups({"members_list", "single"})
      */
     private $membership;
 

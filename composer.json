@@ -16,6 +16,7 @@
         "fzaninotto/faker": "^1.5",
         "google/apiclient": "^2.7",
         "league/flysystem-aws-s3-v3": "^2.0",
+        "nelmio/cors-bundle": "^2.1",
         "oneup/flysystem-bundle": "^4.0",
         "sensio/framework-extra-bundle": "^6.1",
         "symfony/console": "5.2.*",

@@ -54,18 +54,11 @@ class ApiAuthenticator extends AbstractAuthenticator
             // fail authentication with a custom error
             throw new CustomUserMessageAuthenticationException($credentials['email'] . ': Email could not be found.');
         }
-
-//        if ($this->passwordEncoder->isPasswordValid($user, $credentials['password'])) {
-//            throw new CustomUserMessageAuthenticationException('No API token provided');
-//        }
-        $passport = new Passport(new UserBadge($credentials["email"]), new PasswordCredentials($credentials['password']));
-        dd($passport);
-        return $passport;
+        return new Passport(new UserBadge($credentials["email"]), new PasswordCredentials($credentials['password']));
     }
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
     {
-        dd($request->getUser());
         // on success, let the request continue
         return null;
     }

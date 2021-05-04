@@ -57,16 +57,11 @@ class AuthController extends BaseController
             $apiToken = $this->userService->setUserApiToken($user, "auto");
         }
         $this->userService->deleteUserExpiredTokens($user);
-        $data = [
-            // you may want to customize or obfuscate the message first
-            'message' => 'Successfully logged in.',
-            'session' => [
-                "access_token" => $apiToken->getToken(),
-                "expires_at" => $apiToken->getExpiresAt()->getTimestamp()
-            ],
-        ];
-
-        return $this->jsonResponseSuccess("success", $data);
+        return $this->jsonResponseSuccess('Successfully logged in.', [
+            "access_token" => $apiToken->getToken(),
+            "expires_at" => $apiToken->getExpiresAt()->getTimestamp(),
+            "user" => $this->serializerService->entityToArray($user, ["single"])
+        ]);
     }
 
     /**
@@ -90,19 +85,6 @@ class AuthController extends BaseController
             ],
         ];
         return $this->jsonResponseSuccess("success", $data);
-    }
-
-    /**
-     * Gets user data
-     *
-     * @Route("/user/details", methods={ "POST" })
-     * @param Request $request
-     * @return \Symfony\Component\HttpFoundation\JsonResponse
-     */
-    public function getAuthUserDetails()
-    {
-        return $this->jsonResponseSuccess("Success",
-            $this->serializerService->entityToArray($this->getUser()));
     }
 
     /**

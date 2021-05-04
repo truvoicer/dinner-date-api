@@ -18,23 +18,25 @@ class User implements UserInterface
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
-     * @Groups({"members_list"})
+     * @Groups({"members_list", "single"})
      */
     private $id;
 
     /**
      * @ORM\Column(type="string", length=180, unique=true)
+     * @Groups({"single"})
      */
     private $email;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
-     * @Groups({"members_list"})
+     * @Groups({"members_list", "single"})
      */
     private $display_name;
 
     /**
      * @ORM\Column(type="json")
+     * @Groups({"single"})
      */
     private $roles = [];
 
@@ -46,12 +48,13 @@ class User implements UserInterface
 
     /**
      * @ORM\Column(type="datetime")
+     * @Groups({"members_list", "single"})
      */
     private $date_updated;
 
     /**
      * @ORM\Column(type="datetime")
-     * @Groups({"members_list"})
+     * @Groups({"members_list", "single"})
      */
     private $date_created;
 
@@ -74,6 +77,7 @@ class User implements UserInterface
 
     /**
      * @ORM\OneToMany(targetEntity=UserMembership::class, mappedBy="user", orphanRemoval=true)
+     * @Groups({"members_list", "single"})
      */
     private $userMemberships;
 
