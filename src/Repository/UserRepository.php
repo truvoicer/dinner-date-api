@@ -42,10 +42,10 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         $this->_em->flush();
     }
 
-    public function getUserObject(User $user, array $data, ?string $password = null)
+    public function getUserObject(User $user, array $data)
     {
-        if (isset($data['display_name'])) {
-            $user->setDisplayName($data['display_name']);
+        if (isset($data['username'])) {
+            $user->setUsername($data['username']);
         }
         if (isset($data['email'])) {
             $user->setEmail($data['email']);
@@ -66,18 +66,18 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     public function setUserPassword(User $user, array $data, $type)
     {
         if ((array_key_exists("change_password", $data) && $data["change_password"]) || $type === "insert") {
-            if (!array_key_exists("confirm_password", $data) || !array_key_exists("new_password", $data)) {
-                throw new BadRequestHttpException("confirm_password or new_password is not in request.");
+            if (!array_key_exists("confirm_password", $data) || !array_key_exists("password", $data)) {
+                throw new BadRequestHttpException("confirm_password or password is not in request.");
             }
             if ($data["confirm_password"] === "" || $data["confirm_password"] === null ||
-                $data["new_password"] === "" || $data["new_password"] === null) {
+                $data["password"] === "" || $data["password"] === null) {
                 throw new BadRequestHttpException("Confirm or New Password fields have empty values.");
             }
-            if ($data["confirm_password"] !== $data["new_password"]) {
+            if ($data["confirm_password"] !== $data["password"]) {
                 throw new BadRequestHttpException("Confirm and New Password fields don't match.");
             }
             $user->setPassword(
-                $this->passwordEncoder->encodePassword($user, $data['new_password'])
+                $this->passwordEncoder->encodePassword($user, $data['password'])
             );
             return $user;
         }

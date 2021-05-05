@@ -15,6 +15,15 @@ security:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
+
+        auth_user_create:
+            pattern: ^/api/auth/user/create
+            security: false
+
+        auth_validate_token:
+            pattern: ^/api/auth/token/validate
+            custom_authenticators:
+                - App\Security\ApiTokenAuthenticator
         auth:
             pattern: ^/api/auth/
             custom_authenticators:
@@ -26,8 +35,8 @@ security:
         main:
             lazy: true
             custom_authenticators:
-                - App\Security\ApiAuthenticator
                 - App\Security\ApiTokenAuthenticator
+                - App\Security\ApiAuthenticator
 
 #            entry_point: App\Security\CustomFormLoginAuthenticator
 
@@ -44,6 +53,7 @@ security:
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     access_control:
+        - { path: ^/api/auth/create/user, roles: PUBLIC_ACCESS }
         - { path: ^/api/auth/login, roles: PUBLIC_ACCESS }
         - { path: ^/api/admin, roles: ROLE_ADMIN }
         - { path: ^/api, roles: ROLE_USER }

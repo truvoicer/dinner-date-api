@@ -29,10 +29,10 @@ class User implements UserInterface
     private $email;
 
     /**
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="string", length=255, nullable=true, unique=true)
      * @Groups({"members_list", "single"})
      */
-    private $display_name;
+    private $username;
 
     /**
      * @ORM\Column(type="json")
@@ -105,24 +105,14 @@ class User implements UserInterface
         return $this;
     }
 
-    /**
-     * A visual identifier that represents this user.
-     *
-     * @see UserInterface
-     */
-    public function getUsername(): string
+    public function getUsername(): ?string
     {
-        return (string) $this->email;
+        return $this->username;
     }
 
-    public function getDisplayName(): ?string
+    public function setUsername(?string $username): self
     {
-        return $this->display_name;
-    }
-
-    public function setDisplayName(?string $display_name): self
-    {
-        $this->display_name = $display_name;
+        $this->username = $username;
 
         return $this;
     }

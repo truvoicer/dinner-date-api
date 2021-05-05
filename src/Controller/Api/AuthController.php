@@ -2,6 +2,7 @@
 
 namespace App\Controller\Api;
 
+use App\Entity\User;
 use App\Service\SecurityService;
 use App\Service\Tools\HttpRequestService;
 use App\Service\Tools\SerializerService;
@@ -68,23 +69,18 @@ class AuthController extends BaseController
      * API user login
      * Returns user api token data
      *
-     * @Route("/token/validate", methods={ "POST" })
+     * @Route("/token/validate", methods={ "GET" })
      * @param Request $request
      * @return Response
      */
     public function authTokenValidate(): Response
     {
         $apiToken = $this->userService->getLatestToken($this->getUser());
-        $data = [
-            // you may want to customize or obfuscate the message first
-            'message' => 'Successfully logged in.',
-            'session' => [
-                "email" => $this->getUser()->getEmail(),
-                "access_token" => $apiToken->getToken(),
-                "expires_at" => $apiToken->getExpiresAt()->getTimestamp()
-            ],
-        ];
-        return $this->jsonResponseSuccess("success", $data);
+        return $this->jsonResponseSuccess('Token is valid.', [
+            "user" => $this->serializerService->entityToArray($this->getUser(), ["single"]),
+            "access_token" => $apiToken->getToken(),
+            "expires_at" => $apiToken->getExpiresAt()->getTimestamp()
+        ]);
     }
 
     /**
@@ -106,6 +102,32 @@ class AuthController extends BaseController
             "token: " => $setApiToken->getToken(),
             "expiresAt" => $setApiToken->getExpiresAt()->format("Y-m-d H:i:s"),
             "email" => $setApiToken->getuser()->getEmail()
+        ]);
+    }
+
+    /**
+     * Generates a new token for a user
+     *
+     * @Route("/user/create", methods={"POST"})
+     * @param Request $request
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     */
+    public function createUser(Request $request)
+    {
+        $user = $this->userService->createUser(
+            $this->httpRequestService->getRequestData($request, true)
+        );
+        if (!$user instanceof User) {
+            return $this->jsonResponseFail("User create error", []);
+        }
+        $setApiToken = $this->userService->setUserApiToken($user, "auto");
+        if (!$setApiToken) {
+            return $this->jsonResponseFail("Error generating api token");
+        }
+        return $this->jsonResponseSuccess('Token is valid.', [
+            "user" => $this->serializerService->entityToArray($user, ["single"]),
+            "access_token" => $setApiToken->getToken(),
+            "expires_at" => $setApiToken->getExpiresAt()->getTimestamp()
         ]);
     }
 }

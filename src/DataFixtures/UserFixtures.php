@@ -42,7 +42,7 @@ class UserFixtures extends Fixture
             $country = $faker->country;
 
             $user = new User();
-            $user->setDisplayName("$firstName $lastname");
+            $user->setUsername(strtolower($firstName)."_".strtolower($lastname));
             $user->setEmail(strtolower($faker->email));
             $user->setPassword($this->passwordEncoder->encodePassword($user, "Deelite4"));
             $user->setDateCreated($nowDate);
