@@ -2,7 +2,9 @@
 
 namespace App\DataFixtures;
 
+use App\Entity\Membership;
 use App\Entity\User;
+use App\Entity\UserMembership;
 use App\Entity\UserProfile;
 use App\Library\Resources\TestData\BodyType;
 use App\Library\Resources\TestData\EyeColor;
@@ -16,6 +18,13 @@ use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 
 class UserFixtures extends Fixture
 {
+    const MEMBERSHIPS = [
+        "free_membership" => "Free Membership",
+        "bronze_membership" => "Bronze Membership",
+        "silver_membership" => "Silver Membership",
+        "gold_membership" => "Gold Membership",
+        "platinum_membership" => "Platinum Membership",
+    ];
     protected UserPasswordEncoderInterface $passwordEncoder;
 
     public function __construct(
@@ -34,20 +43,40 @@ class UserFixtures extends Fixture
         $maritalStatus = MaritalStatus::getData();
         $sexualPreferences = SexualPreferences::getData();
 
+        foreach (self::MEMBERSHIPS as $name => $label) {
+            $membershipModel = new Membership();
+            $membershipModel->setDisplayName($label);
+            $membershipModel->setName($name);
+            $manager->persist($membershipModel);
+        }
+        $manager->flush();
+
+        $freeMembership = $manager->getRepository(Membership::class)->findOneBy(["name" => "free_membership"]);
+
         for ($i = 0; $i < 100; $i++) {
             $faker = \Faker\Factory::create();
             $nowDate = $faker->dateTimeBetween("-30 years");
             $firstName = $faker->firstName;
             $lastname = $faker->lastName;
             $country = $faker->country;
+            if ($i === 0) {
+                $username = "truvoice";
+                $email = "mikydxl@gmail.com";
+                $roles = ["ROLE_USER", "ROLE_ADMIN", "ROLE_SUPER_ADMIN"];
+            } else {
+                $username = strtolower($firstName) . "_" . strtolower($lastname);
+                $email = strtolower($faker->email);
+                $roles = ["ROLE_USER"];
+            }
 
             $user = new User();
-            $user->setUsername(strtolower($firstName)."_".strtolower($lastname));
-            $user->setEmail(strtolower($faker->email));
+            $user->setUsername($username);
+            $user->setEmail($email);
             $user->setPassword($this->passwordEncoder->encodePassword($user, "Deelite4"));
             $user->setDateCreated($nowDate);
             $user->setDateUpdated($nowDate);
-            $user->setRoles(["ROLE_USER"]);
+            $user->setRoles($roles);
+
 
             $userProfile = new UserProfile();
             $userProfile->setUser($user);
@@ -68,7 +97,12 @@ class UserFixtures extends Fixture
             $userProfile->setMaritalStatus($maritalStatus[mt_rand(0, count($maritalStatus) - 1)]);
             $userProfile->setSexualPreference($sexualPreferences[mt_rand(0, count($sexualPreferences) - 1)]);
 
+            $userMembership = new UserMembership();
+            $userMembership->setUser($user);
+            $userMembership->setMembership($freeMembership);
+
             $manager->persist($user);
+            $manager->persist($userMembership);
             $manager->persist($userProfile);
 
             $manager->flush();

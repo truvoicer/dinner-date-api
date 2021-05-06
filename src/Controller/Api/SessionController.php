@@ -50,8 +50,12 @@ class SessionController extends BaseController
      */
     public function getSessionUserDetail()
     {
-        return $this->jsonResponseSuccess("Success",
-            $this->serializerService->entityToArray($this->getUser()));
+        return $this->jsonResponseSuccess("User fetch successful",
+            $this->serializerService->entityToArray(
+                $this->getUser(),
+                ["full_user"]
+            )
+        );
     }
 
 }

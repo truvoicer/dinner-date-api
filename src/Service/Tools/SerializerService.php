@@ -28,7 +28,7 @@ class SerializerService
         $this->classMetadataFactory = new ClassMetadataFactory(new AnnotationLoader(new AnnotationReader()));
     }
 
-    public function entityToArray($entity, array $groups = ['main'])
+    public function entityToArray($entity, array $groups = ['single'])
     {
         $normalizer = new ObjectNormalizer($this->classMetadataFactory, new CamelCaseToSnakeCaseNameConverter(), null,
             null, null, null, $this->getDefaultContext());

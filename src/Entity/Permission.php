@@ -17,19 +17,19 @@ class Permission
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
-     * @Groups({"main", "main_relations", "search", "list", "single"})
+     * @Groups({"single", "full_user"})
      */
     private $id;
 
     /**
      * @ORM\Column(type="string", length=255)
-     * @Groups({"main", "main_relations", "search", "list", "single"})
+     * @Groups({"single", "full_user"})
      */
     private $name;
 
     /**
      * @ORM\Column(type="string", length=255)
-     * @Groups({"main", "main_relations", "search", "list", "single"})
+     * @Groups({"single", "full_user"})
      */
     private $label;
 

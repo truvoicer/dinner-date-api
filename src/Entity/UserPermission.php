@@ -6,6 +6,7 @@ use App\Repository\UserPermissionRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Serializer\Annotation\Groups;
 
 /**
  * @ORM\Entity(repositoryClass=UserPermissionRepository::class)
@@ -16,11 +17,13 @@ class UserPermission
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
+     * @Groups({"full_user"})
      */
     private $id;
 
     /**
      * @ORM\ManyToMany(targetEntity=Permission::class, inversedBy="userPermissions")
+     * @Groups({"full_user"})
      */
     private $permission;
 

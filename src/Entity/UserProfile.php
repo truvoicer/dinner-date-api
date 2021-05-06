@@ -15,109 +15,108 @@ class UserProfile
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
-     * @Groups({"members_list"})
+     * @Groups({"members_list", "full_user"})
      */
     private $id;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
-     * @Groups({"members_list"})
+     * @Groups({"members_list", "full_user"})
      */
     private $first_name;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
-     * @Groups({"members_list"})
+     * @Groups({"members_list", "full_user"})
      */
     private $last_name;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
-     * @Groups({"members_list"})
+     * @Groups({"members_list", "full_user"})
      */
     private $gender;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
-     * @Groups({"members_list"})
+     * @Groups({"members_list", "full_user"})
      */
     private $marital_status;
 
     /**
      * @ORM\Column(type="datetime", nullable=true)
-     * @Groups({"members_list"})
+     * @Groups({"members_list", "full_user"})
      */
     private $dob;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
-     * @Groups({"members_list"})
+     * @Groups({"members_list", "full_user"})
      */
     private $country;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
-     * @Groups({"members_list"})
+     * @Groups({"members_list", "full_user"})
      */
     private $city;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
-     * @Groups({"members_list"})
+     * @Groups({"members_list", "full_user"})
      */
     private $address;
 
     /**
      * @ORM\Column(type="string", length=255)
-     * @Groups({"members_list"})
+     * @Groups({"members_list", "full_user"})
      */
     private $height;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
-     * @Groups({"members_list"})
+     * @Groups({"members_list", "full_user"})
      */
     private $weight;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
-     * @Groups({"members_list"})
+     * @Groups({"members_list", "full_user"})
      */
     private $hair_color;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
-     * @Groups({"members_list"})
+     * @Groups({"members_list", "full_user"})
      */
     private $eye_color;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
-     * @Groups({"members_list"})
+     * @Groups({"members_list", "full_user"})
      */
     private $body_type;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
-     * @Groups({"members_list"})
+     * @Groups({"members_list", "full_user"})
      */
     private $ethnicity;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
-     * @Groups({"members_list"})
+     * @Groups({"members_list", "full_user"})
      */
     private $sexual_preference;
 
     /**
      * @ORM\Column(type="string", length=512, nullable=true)
-     * @Groups({"members_list"})
+     * @Groups({"members_list", "full_user"})
      */
     private $description;
 
     /**
-     * @ORM\ManyToOne(targetEntity=User::class, inversedBy="userProfiles")
-     * @ORM\JoinColumn(nullable=false)
+     * @ORM\OneToOne(targetEntity=User::class, mappedBy="user_profile", cascade={"persist", "remove"})
      */
     private $user;
 
@@ -325,6 +324,16 @@ class UserProfile
 
     public function setUser(?User $user): self
     {
+        // unset the owning side of the relation if necessary
+        if ($user === null && $this->user !== null) {
+            $this->user->setUserProfile(null);
+        }
+
+        // set the owning side of the relation if necessary
+        if ($user !== null && $user->getUserProfile() !== $this) {
+            $user->setUserProfile($this);
+        }
+
         $this->user = $user;
 
         return $this;

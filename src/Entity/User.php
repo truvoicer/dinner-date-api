@@ -18,25 +18,25 @@ class User implements UserInterface
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
-     * @Groups({"members_list", "single"})
+     * @Groups({"members_list", "single", "full_user"})
      */
     private $id;
 
     /**
      * @ORM\Column(type="string", length=180, unique=true)
-     * @Groups({"single"})
+     * @Groups({"single", "full_user"})
      */
     private $email;
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true, unique=true)
-     * @Groups({"members_list", "single"})
+     * @Groups({"members_list", "single", "full_user"})
      */
     private $username;
 
     /**
      * @ORM\Column(type="json")
-     * @Groups({"single"})
+     * @Groups({"single", "full_user"})
      */
     private $roles = [];
 
@@ -48,24 +48,19 @@ class User implements UserInterface
 
     /**
      * @ORM\Column(type="datetime")
-     * @Groups({"members_list", "single"})
+     * @Groups({"members_list", "single", "full_user"})
      */
     private $date_updated;
 
     /**
      * @ORM\Column(type="datetime")
-     * @Groups({"members_list", "single"})
+     * @Groups({"members_list", "single", "full_user"})
      */
     private $date_created;
 
     /**
-     * @ORM\OneToMany(targetEntity=UserProfile::class, mappedBy="user", orphanRemoval=true)
-     * @Groups({"members_list"})
-     */
-    private $userProfiles;
-
-    /**
      * @ORM\OneToMany(targetEntity=UserPermission::class, mappedBy="user", orphanRemoval=true)
+     * @Groups({"members_list", "full_user"})
      */
     private $userPermissions;
 
@@ -77,13 +72,18 @@ class User implements UserInterface
 
     /**
      * @ORM\OneToMany(targetEntity=UserMembership::class, mappedBy="user", orphanRemoval=true)
-     * @Groups({"members_list", "single"})
+     * @Groups({"members_list", "single", "full_user"})
      */
     private $userMemberships;
 
+    /**
+     * @ORM\OneToOne(targetEntity=UserProfile::class, inversedBy="user", cascade={"persist", "remove"})
+     * @Groups({"members_list", "full_user"})
+     */
+    private $user_profile;
+
     public function __construct()
     {
-        $this->userProfiles = new ArrayCollection();
         $this->userPermissions = new ArrayCollection();
         $this->userMemberships = new ArrayCollection();
     }
@@ -196,36 +196,6 @@ class User implements UserInterface
     }
 
     /**
-     * @return Collection|UserProfile[]
-     */
-    public function getUserProfiles(): Collection
-    {
-        return $this->userProfiles;
-    }
-
-    public function addUserProfile(UserProfile $userProfile): self
-    {
-        if (!$this->userProfiles->contains($userProfile)) {
-            $this->userProfiles[] = $userProfile;
-            $userProfile->setUser($this);
-        }
-
-        return $this;
-    }
-
-    public function removeUserProfile(UserProfile $userProfile): self
-    {
-        if ($this->userProfiles->removeElement($userProfile)) {
-            // set the owning side to null (unless already changed)
-            if ($userProfile->getUser() === $this) {
-                $userProfile->setUser(null);
-            }
-        }
-
-        return $this;
-    }
-
-    /**
      * @return Collection|UserPermission[]
      */
     public function getUserPermissions(): Collection
@@ -312,6 +282,18 @@ class User implements UserInterface
                 $userMembership->setUser(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getUserProfile(): ?UserProfile
+    {
+        return $this->user_profile;
+    }
+
+    public function setUserProfile(?UserProfile $user_profile): self
+    {
+        $this->user_profile = $user_profile;
 
         return $this;
     }
