@@ -5,8 +5,10 @@ namespace App\Service\User;
 use App\Entity\UserApiToken;
 use App\Entity\Permission;
 use App\Entity\User;
+use App\Entity\UserProfile;
 use App\Repository\PermissionRepository;
 use App\Repository\UserApiTokenRepository;
+use App\Repository\UserProfileRepository;
 use App\Repository\UserRepository;
 use App\Service\BaseService;
 use App\Service\Tools\HttpRequestService;
@@ -20,6 +22,7 @@ class UserService extends BaseService
 
     protected EntityManagerInterface $em;
     protected UserRepository $userRepository;
+    protected UserProfileRepository $userProfileRepository;
     protected PermissionRepository $permissionRepository;
     protected UserApiTokenRepository$userApiTokenRepository;
     protected HttpRequestService $httpRequestService;
@@ -29,6 +32,7 @@ class UserService extends BaseService
     {
         $this->em = $entityManager;
         $this->userRepository = $this->em->getRepository(User::class);
+        $this->userProfileRepository = $this->em->getRepository(UserProfile::class);
         $this->permissionRepository = $this->em->getRepository(Permission::class);
         $this->userApiTokenRepository = $this->em->getRepository(UserApiToken::class);
         $this->httpRequestService = $httpRequestService;
@@ -87,8 +91,6 @@ class UserService extends BaseService
         return $this->userRepository->findByParams($sort, $order, $count);
     }
 
-
-
     public function createUser(array $data)
     {
         $user = $this->userRepository->getUserObject(new User(), $data);
@@ -99,20 +101,7 @@ class UserService extends BaseService
         return false;
     }
 
-    public function updateSessionUser(User $user, array $data)
-    {
-        $userObject = $this->userRepository->setUserPassword(
-            $this->userRepository->getUserObject($user, $data),
-            $data,
-            "update"
-        );
-        if ($this->httpRequestService->validateData($userObject)) {
-            return $this->userRepository->updateUser($userObject);
-        }
-        return false;
-    }
-
-    public function updateUser(User $user, array $data)
+    public function updateUser(User|UserInterface $user, array $data)
     {
         $getUser = $this->userRepository->setUserPassword(
             $this->userRepository->getUserObject($user, $data),
@@ -121,6 +110,15 @@ class UserService extends BaseService
         );
         if ($this->httpRequestService->validateData($getUser)) {
             return $this->userRepository->updateUser($getUser);
+        }
+        return false;
+    }
+
+    public function updateUserProfile(User|UserInterface $user, array $data)
+    {
+        $getUserProfileObject = $this->userProfileRepository->getUserProfileObject($user->getUserProfile(), $data);
+        if ($this->httpRequestService->validateData($getUserProfileObject)) {
+            return $this->userProfileRepository->updateUserProfile($getUserProfileObject);
         }
         return false;
     }

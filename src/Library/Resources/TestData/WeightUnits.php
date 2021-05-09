@@ -1,14 +1,14 @@
 <?php
 namespace App\Library\Resources\TestData;
 
-class Genders
+class WeightUnits
 {
     public static function getData()
     {
         return [
-            "male",
-            "female",
-            "other",
+            "kg",
+            "st",
+            "lb",
             "not_specified"
         ];
     }

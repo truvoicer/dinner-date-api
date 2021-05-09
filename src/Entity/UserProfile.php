@@ -41,6 +41,12 @@ class UserProfile
      * @ORM\Column(type="string", length=255, nullable=true)
      * @Groups({"members_list", "full_user"})
      */
+    private $gender_preference;
+
+    /**
+     * @ORM\Column(type="string", length=255, nullable=true)
+     * @Groups({"members_list", "full_user"})
+     */
     private $marital_status;
 
     /**
@@ -68,13 +74,13 @@ class UserProfile
     private $address;
 
     /**
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="integer", length=3, nullable=true)
      * @Groups({"members_list", "full_user"})
      */
     private $height;
 
     /**
-     * @ORM\Column(type="string", length=255, nullable=true)
+     * @ORM\Column(type="integer", length=3, nullable=true)
      * @Groups({"members_list", "full_user"})
      */
     private $weight;
@@ -113,12 +119,61 @@ class UserProfile
      * @ORM\Column(type="string", length=512, nullable=true)
      * @Groups({"members_list", "full_user"})
      */
-    private $description;
+    private $summary;
+
+    /**
+     * @ORM\Column(type="text", nullable=true)
+     * @Groups({"members_list", "full_user"})
+     */
+    private $partner_qualities;
+
+    /**
+     * @ORM\Column(type="text", nullable=true)
+     * @Groups({"members_list", "full_user"})
+     */
+    private $interests;
+
+    /**
+     * @ORM\Column(type="text", nullable=true)
+     * @Groups({"members_list", "full_user"})
+     */
+    private $hobbies;
+
+    /**
+     * @ORM\Column(type="boolean", nullable=true)
+     * @Groups({"members_list", "full_user"})
+     */
+    private $smoking_preference;
+
+    /**
+     * @ORM\Column(type="string", length=15, nullable=true)
+     * @Groups({"members_list", "full_user"})
+     */
+    private $smoking_status;
+
+    /**
+     * @ORM\Column(type="string", length=512, nullable=true)
+     * @Groups({"members_list", "full_user"})
+     */
+    private $languages;
+
+    /**
+     * @ORM\Column(type="string", length=15, nullable=true)
+     * @Groups({"members_list", "full_user"})
+     */
+    private $height_unit;
+
+    /**
+     * @ORM\Column(type="string", length=15, nullable=true)
+     * @Groups({"members_list", "full_user"})
+     */
+    private $weight_unit;
 
     /**
      * @ORM\OneToOne(targetEntity=User::class, mappedBy="user_profile", cascade={"persist", "remove"})
      */
     private $user;
+
 
     public function getId(): ?int
     {
@@ -157,6 +212,18 @@ class UserProfile
     public function setGender(?string $gender): self
     {
         $this->gender = $gender;
+
+        return $this;
+    }
+
+    public function getGenderPreference(): ?string
+    {
+        return $this->gender_preference;
+    }
+
+    public function setGenderPreference(?string $gender_preference): self
+    {
+        $this->gender_preference = $gender_preference;
 
         return $this;
     }
@@ -305,14 +372,14 @@ class UserProfile
         return $this;
     }
 
-    public function getDescription(): ?string
+    public function getSummary(): ?string
     {
-        return $this->description;
+        return $this->summary;
     }
 
-    public function setDescription(?string $description): self
+    public function setSummary(?string $summary): self
     {
-        $this->description = $description;
+        $this->summary = $summary;
 
         return $this;
     }
@@ -335,6 +402,102 @@ class UserProfile
         }
 
         $this->user = $user;
+
+        return $this;
+    }
+
+    public function getPartnerQualities(): ?string
+    {
+        return $this->partner_qualities;
+    }
+
+    public function setPartnerQualities(?string $partner_qualities): self
+    {
+        $this->partner_qualities = $partner_qualities;
+
+        return $this;
+    }
+
+    public function getInterests(): ?string
+    {
+        return $this->interests;
+    }
+
+    public function setInterests(?string $interests): self
+    {
+        $this->interests = $interests;
+
+        return $this;
+    }
+
+    public function getHobbies(): ?string
+    {
+        return $this->hobbies;
+    }
+
+    public function setHobbies(?string $hobbies): self
+    {
+        $this->hobbies = $hobbies;
+
+        return $this;
+    }
+
+    public function getSmokingPreference(): ?string
+    {
+        return $this->smoking_preference;
+    }
+
+    public function setSmokingPreference(?string $smoking_preference): self
+    {
+        $this->smoking_preference = $smoking_preference;
+
+        return $this;
+    }
+
+    public function getSmokingStatus(): ?string
+    {
+        return $this->smoking_status;
+    }
+
+    public function setSmokingStatus(?string $smoking_status): self
+    {
+        $this->smoking_status = $smoking_status;
+
+        return $this;
+    }
+
+    public function getLanguages(): ?string
+    {
+        return $this->languages;
+    }
+
+    public function setLanguages(?string $languages): self
+    {
+        $this->languages = $languages;
+
+        return $this;
+    }
+
+    public function getHeightUnit(): ?string
+    {
+        return $this->height_unit;
+    }
+
+    public function setHeightUnit(?string $height_unit): self
+    {
+        $this->height_unit = $height_unit;
+
+        return $this;
+    }
+
+    public function getWeightUnit(): ?string
+    {
+        return $this->weight_unit;
+    }
+
+    public function setWeightUnit(?string $weight_unit): self
+    {
+        $this->weight_unit = $weight_unit;
 
         return $this;
     }

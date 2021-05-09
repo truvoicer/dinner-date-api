@@ -8,10 +8,15 @@ use App\Entity\UserMembership;
 use App\Entity\UserProfile;
 use App\Library\Resources\TestData\BodyType;
 use App\Library\Resources\TestData\EyeColor;
+use App\Library\Resources\TestData\GenderPreferences;
 use App\Library\Resources\TestData\Genders;
 use App\Library\Resources\TestData\HairColor;
+use App\Library\Resources\TestData\HeightUnits;
 use App\Library\Resources\TestData\MaritalStatus;
 use App\Library\Resources\TestData\SexualPreferences;
+use App\Library\Resources\TestData\SmokingPreferences;
+use App\Library\Resources\TestData\SmokingStatus;
+use App\Library\Resources\TestData\WeightUnits;
 use Doctrine\Bundle\FixturesBundle\Fixture;
 use Doctrine\Persistence\ObjectManager;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
@@ -39,9 +44,14 @@ class UserFixtures extends Fixture
         $bodyTypes = BodyType::getData();
         $eyeColor = EyeColor::getData();
         $genders = Genders::getData();
+        $genderPreferences = GenderPreferences::getData();
         $hairColor = HairColor::getData();
         $maritalStatus = MaritalStatus::getData();
         $sexualPreferences = SexualPreferences::getData();
+        $smokingPreferences = SmokingPreferences::getData();
+        $smokingStatus = SmokingStatus::getData();
+        $weightUnits = WeightUnits::getData();
+        $heightUnits = HeightUnits::getData();
 
         foreach (self::MEMBERSHIPS as $name => $label) {
             $membershipModel = new Membership();
@@ -81,8 +91,8 @@ class UserFixtures extends Fixture
             $userProfile = new UserProfile();
             $userProfile->setUser($user);
             $userProfile->setDob($faker->dateTimeBetween("-30 years", "-18 years"));
-            $userProfile->setHeight(mt_rand(4, 7) . " ft");
-            $userProfile->setWeight(mt_rand(60, 150) . " kg");
+            $userProfile->setHeight(mt_rand(4, 7));
+            $userProfile->setWeight(mt_rand(60, 150));
 
             $userProfile->setFirstName($firstName);
             $userProfile->setLastName($lastname);
@@ -93,9 +103,19 @@ class UserFixtures extends Fixture
             $userProfile->setEthnicity($country);
             $userProfile->setEyeColor($eyeColor[mt_rand(0, count($eyeColor) - 1)]);
             $userProfile->setGender($genders[mt_rand(0, count($genders) - 1)]);
+            $userProfile->setGenderPreference($genderPreferences[mt_rand(0, count($genderPreferences) - 1)]);
             $userProfile->setHairColor($hairColor[mt_rand(0, count($hairColor) - 1)]);
             $userProfile->setMaritalStatus($maritalStatus[mt_rand(0, count($maritalStatus) - 1)]);
             $userProfile->setSexualPreference($sexualPreferences[mt_rand(0, count($sexualPreferences) - 1)]);
+            $userProfile->setPartnerQualities(null);
+            $userProfile->setInterests(null);
+            $userProfile->setInterests(null);
+            $userProfile->setHobbies(null);
+            $userProfile->setSmokingPreference($smokingPreferences[mt_rand(0, count($smokingPreferences) - 1)]);
+            $userProfile->setSmokingStatus($smokingStatus[mt_rand(0, count($smokingStatus) - 1)]);
+            $userProfile->setLanguages(null);
+            $userProfile->setHeightUnit($heightUnits[mt_rand(0, count($heightUnits) - 1)]);
+            $userProfile->setWeightUnit($weightUnits[mt_rand(0, count($weightUnits) - 1)]);
 
             $userMembership = new UserMembership();
             $userMembership->setUser($user);

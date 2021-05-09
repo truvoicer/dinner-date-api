@@ -1,15 +1,14 @@
 <?php
 namespace App\Library\Resources\TestData;
 
-class Genders
+class SmokingPreferences
 {
     public static function getData()
     {
         return [
-            "male",
-            "female",
-            "other",
-            "not_specified"
+            true,
+            false,
+            null
         ];
     }
 }

@@ -48,4 +48,5 @@ class MemberService extends UserService
             $params
         );
     }
+
 }

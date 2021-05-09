@@ -35,6 +35,9 @@ class UserProfileRepository extends ServiceEntityRepository
         foreach ($data as $key => $value) {
             $setMethodName = sprintf("set%s", UtilsService::stringToCamelCase($key, true));
             if (method_exists($userProfile, $setMethodName)) {
+                if ($key === "dob") {
+                    $value = new \DateTime($value);
+                }
                 $userProfile->$setMethodName($value);
             }
         }

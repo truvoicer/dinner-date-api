@@ -77,7 +77,7 @@ class User implements UserInterface
     private $userMemberships;
 
     /**
-     * @ORM\OneToOne(targetEntity=UserProfile::class, inversedBy="user", cascade={"persist", "remove"})
+     * @ORM\OneToOne(targetEntity=UserProfile::class, inversedBy="user")
      * @Groups({"members_list", "full_user"})
      */
     private $user_profile;

@@ -48,13 +48,14 @@ class SerializerService
 
     private function getDefaultContext()
     {
-        $dateCallback = function ($innerObject, $outerObject, string $attributeName, string $format = null, array $context = []) {
-            return $innerObject instanceof \DateTime ? $innerObject->format("Y-m-d H:i:s") : '';
+        $dateTimeFormatterCallback = function ($innerObject, $outerObject, string $attributeName, string $format = null, array $context = []) {
+            return $innerObject instanceof \DateTime ? $innerObject->format("Y-m-d") : '';
         };
         return [
             ObjectNormalizer::CALLBACKS => [
-                'date_updated' => $dateCallback,
-                'date_created' => $dateCallback,
+                'date_updated' => $dateTimeFormatterCallback,
+                'date_created' => $dateTimeFormatterCallback,
+                'dob' => $dateTimeFormatterCallback,
             ],
             ObjectNormalizer::CIRCULAR_REFERENCE_HANDLER => function ($object, $format, $context) {
                 return $object;

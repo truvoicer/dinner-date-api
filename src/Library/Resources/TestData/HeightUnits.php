@@ -1,14 +1,13 @@
 <?php
 namespace App\Library\Resources\TestData;
 
-class Genders
+class HeightUnits
 {
     public static function getData()
     {
         return [
-            "male",
-            "female",
-            "other",
+            "ft",
+            "cm",
             "not_specified"
         ];
     }

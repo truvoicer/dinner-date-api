@@ -167,7 +167,7 @@ class UserController extends BaseController
      */
     public function updateUser(Request $request)
     {
-        $update = $this->userService->updateSessionUser(
+        $update = $this->userService->updateUser(
             $this->getUser(),
             $this->httpRequestService->getRequestData($request, true));
         if(!$update) {
@@ -175,5 +175,29 @@ class UserController extends BaseController
         }
         return $this->jsonResponseSuccess("User updated",
             $this->serializerService->entityToArray($update, ['main']));
+    }
+
+    /**
+     * Gets a single user based on the id in the request url
+     *
+     * @Route("/profile/update", methods={"POST"})
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     */
+    public function updateUserProfile(Request $request)
+    {
+        $updateUserProfile = $this->userService->updateUserProfile(
+            $this->getUser(),
+            HttpRequestService::getRequestData($request, true)
+        );
+        if (!$updateUserProfile) {
+            return $this->jsonResponseFail("Error updating user profile", $this->getUser());
+        }
+        return $this->jsonResponseSuccess(
+            "success",
+            $this->serializerService->entityToArray(
+                $this->getUser(),
+                ["full_user"]
+            )
+        );
     }
 }

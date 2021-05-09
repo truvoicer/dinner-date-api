@@ -1,14 +1,14 @@
 <?php
 namespace App\Library\Resources\TestData;
 
-class Genders
+class GenderPreferences
 {
     public static function getData()
     {
         return [
             "male",
             "female",
-            "other",
+            "both",
             "not_specified"
         ];
     }
