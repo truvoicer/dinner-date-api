@@ -34,9 +34,10 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
             ->leftJoin("user.files", "files")
             ->leftJoin("files.file_system", "file_system")
             ->where("user = :user")
-            ->andWhere("file_system.name = :file_system_name")
+//            ->andWhere("file_system.name = :file_system_name")
             ->setParameter("user", $user)
-            ->setParameter("file_system_name", S3PublicUploadService::FILE_SYSTEM_NAME);
+//            ->setParameter("file_system_name", S3PublicUploadService::FILE_SYSTEM_NAME)
+            ->getQuery()->getOneOrNullResult();
     }
     /**
      * Used to upgrade (rehash) the user's password automatically over time.

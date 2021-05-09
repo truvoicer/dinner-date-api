@@ -73,10 +73,6 @@ class MemberController extends BaseController
      */
     public function getMemberProfile(User $user, Request $request)
     {
-        dd($this->serializerService->entityToArray(
-            $this->memberService->getUserProfile($user),
-            ["full_user"]
-        ));
         return $this->jsonResponseSuccess(
             "success",
             $this->serializerService->entityToArray(
