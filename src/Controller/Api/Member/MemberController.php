@@ -56,7 +56,7 @@ class MemberController extends BaseController
         return $this->jsonResponseSuccess(
             "success",
             $this->serializerService->entityToArray(
-                $this->memberService->getMemberList(
+                $this->memberService->getAllUsersWithMemberships(
                     $this->getUser(),
                     $request->query->all()
                 ),
@@ -68,18 +68,20 @@ class MemberController extends BaseController
     /**
      * Gets a single user based on the id in the request url
      *
-     * @Route("/detail", methods={"GET"})
+     * @Route("/{username}/detail", methods={"GET"})
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function getMemberProfile(Request $request)
+    public function getMemberProfile(User $user, Request $request)
     {
+        dd($this->serializerService->entityToArray(
+            $this->memberService->getUserProfile($user),
+            ["full_user"]
+        ));
         return $this->jsonResponseSuccess(
             "success",
             $this->serializerService->entityToArray(
-                $this->memberService->getMemberList(
-                    $this->getUser(),
-                    $request->query->all()
-                )
+                $this->memberService->getUserProfile($user),
+                ["full_user"]
             )
         );
     }

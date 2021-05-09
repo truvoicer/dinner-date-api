@@ -82,10 +82,17 @@ class User implements UserInterface
      */
     private $user_profile;
 
+    /**
+     * @ORM\OneToMany(targetEntity=File::class, mappedBy="user", orphanRemoval=true)
+     * @Groups({"members_list", "full_user"})
+     */
+    private $files;
+
     public function __construct()
     {
         $this->userPermissions = new ArrayCollection();
         $this->userMemberships = new ArrayCollection();
+        $this->files = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -294,6 +301,36 @@ class User implements UserInterface
     public function setUserProfile(?UserProfile $user_profile): self
     {
         $this->user_profile = $user_profile;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|File[]
+     */
+    public function getFiles(): Collection
+    {
+        return $this->files;
+    }
+
+    public function addFile(File $file): self
+    {
+        if (!$this->files->contains($file)) {
+            $this->files[] = $file;
+            $file->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeFile(File $file): self
+    {
+        if ($this->files->removeElement($file)) {
+            // set the owning side to null (unless already changed)
+            if ($file->getUser() === $this) {
+                $file->setUser(null);
+            }
+        }
 
         return $this;
     }

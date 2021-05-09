@@ -33,20 +33,9 @@ class MemberService extends UserService
         $this->userProfileRepository = $this->em->getRepository(UserProfile::class);
     }
 
-    public function getMemberList(User|UserInterface $user, array $params = [])
+    public function getAllUsersWithMemberships(User|UserInterface $user, array $params = [])
     {
-        return $this->userMembershipRepository->findMembersByMembership(
-            "member",
-            $params
-        );
-    }
-
-    public function getMemberProfile(User|UserInterface $user, array $params = [])
-    {
-        return $this->userProfileRepository->findOneUserProfile(
-            $user,
-            $params
-        );
+        return $this->userMembershipRepository->findAllUsersWithMembership($params);
     }
 
 }

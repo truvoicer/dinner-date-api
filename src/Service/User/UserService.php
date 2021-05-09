@@ -38,7 +38,9 @@ class UserService extends BaseService
         $this->httpRequestService = $httpRequestService;
 
     }
-
+    public function getUserProfile(User|UserInterface $user) {
+        return $this->userRepository->findUserProfile($user);
+    }
     public function getUserByEmail($email)
     {
         return $this->userRepository->findOneBy(['email' => $email]);

@@ -50,34 +50,36 @@ class PublicMediaInterface
 
     public function mediaUploadHandler() {
         switch ($this->requestData["media_category"]) {
-            case "profile_image":
+            case "profile_cover":
+            case "profile_pic":
                 return $this->profileImageUploadHandler();
         }
     }
 
     public function mediaDeleteHandler() {
         switch ($this->requestData["media_category"]) {
-            case "profile_image":
+            case "profile_cover":
+            case "profile_pic":
                 return $this->profileImageDeleteHandler();
         }
     }
 
     protected function profileImageDeleteHandler() {
         $file = $this->fileSystemCrudService->getFileById($this->requestData["file_id"]);
-        if(!$this->s3PublicUploadService->deleteFileFromS3($file->getPath())) {
+        if(!$this->s3PublicUploadService->deleteFileFromS3($file->getFilename() . $file->getExtension())) {
             return false;
         }
         return $this->fileSystemCrudService->deleteFile($file);
     }
 
     protected function profileImageUploadHandler() {
-        $file = $this->request->files->get("profile_image_file");
+        $file = $this->request->files->get("file");
         if (!self::validateImageFile($file)) {
             return false;
         }
         $getPath =  $this->localTempUploadService->moveToTempDir(
             $file,
-            $this->buildFileName("profile_image_file"),
+            $this->buildFileName($this->requestData["media_category"]),
             self::ALLOWED_IMAGE_MIME_TYPES[$file->getClientMimeType()]
         );
         $fileName = $getPath["filename"] . $getPath["ext"];
@@ -90,12 +92,12 @@ class PublicMediaInterface
         if (!$this->localTempUploadService->deleteFileFromTemp($getPath["full_filename"])) {
 
         }
-        return $this->fileSystemCrudService->createFile([
-            'media_category' => "profile_image",
+        return $this->fileSystemCrudService->createFile($this->getUser(), [
+            'media_category' => $this->requestData["media_category"],
             'media_type' => "image",
             'file_name' => $getPath["filename"],
-            'file_path' => $getPath["full_filename"],
-            'full_path' => $getPath["path"],
+            'file_url' => $getPath["full_filename"],
+            'temp_path' => $getPath["path"],
             'file_type' => ltrim($getPath["ext"], "."),
             'mime_type' => $getPath["mime_type"],
             'file_extension' => $getPath["ext"],

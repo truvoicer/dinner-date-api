@@ -10,13 +10,13 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 class LocalPublicDownloadService extends FileSystemServiceBase
 {
-    const FILE_SYSTEM_NAME = "public_filesystem";
+    const FILE_SYSTEM_NAME = "local_public_filesystem";
 
-    private FilesystemOperator $publicFilesystem;
+    private FilesystemOperator $localPublicFilesystem;
     private string $publicDownloadDir;
 
     public function __construct(
-        FilesystemOperator $publicFilesystem,
+        FilesystemOperator $localPublicFilesystem,
         FileSystemCrudService $fileSystemCrudService,
         ParameterBagInterface $parameterBag,
         string $projectDir,
@@ -24,12 +24,12 @@ class LocalPublicDownloadService extends FileSystemServiceBase
     )
     {
         parent::__construct($fileSystemCrudService, $parameterBag);
-        $this->publicFilesystem = $publicFilesystem;
+        $this->localPublicFilesystem = $localPublicFilesystem;
         $this->publicDownloadDir = $publicDir . "/downloads";
     }
 
     public function readFileStream(string $path) {
-        $resource = $this->publicFilesystem->readStream($path);
+        $resource = $this->localPublicFilesystem->readStream($path);
         if ($resource === false) {
             throw new BadRequestHttpException(sprintf("Error opening file stream for path: (%s)", $path));
         }
@@ -37,6 +37,6 @@ class LocalPublicDownloadService extends FileSystemServiceBase
     }
 
     public function getDownloadsFilesystem() {
-        return $this->publicFilesystem;
+        return $this->localPublicFilesystem;
     }
 }

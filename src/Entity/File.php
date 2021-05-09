@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Repository\FileRepository;
+use App\Service\Tools\FileSystem\Public\Upload\S3PublicUploadService;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
@@ -18,24 +19,28 @@ class File
      * @ORM\Id()
      * @ORM\GeneratedValue()
      * @ORM\Column(type="integer")
+     * @Groups({"members_list", "full_user"})
      */
     private $id;
 
     /**
      * @Groups({"main"})
      * @ORM\Column(type="string", length=255)
+     * @Groups({"members_list", "full_user"})
      */
     private $media_category;
 
     /**
      * @Groups({"main"})
      * @ORM\Column(type="string", length=255)
+     * @Groups({"members_list", "full_user"})
      */
     private $media_type;
 
     /**
      * @Groups({"main"})
      * @ORM\Column(type="string", length=255)
+     * @Groups({"members_list", "full_user"})
      */
     private $filename;
 
@@ -43,53 +48,47 @@ class File
      * @Groups({"main"})
      * @ORM\Column(type="string", length=512)
      */
-    private $path;
-
-    /**
-     * @Groups({"main"})
-     * @ORM\Column(type="string", length=512)
-     */
-    private $full_path;
+    private $temp_path;
     
     /**
      * @Groups({"main"})
      * @ORM\Column(type="string", length=255)
+     * @Groups({"members_list", "full_user"})
      */
     private $extension;
 
     /**
      * @Groups({"main"})
      * @ORM\Column(type="string", length=255)
+     * @Groups({"members_list", "full_user"})
      */
     private $fileType;
 
     /**
      * @Groups({"main"})
      * @ORM\Column(type="integer")
+     * @Groups({"members_list", "full_user"})
      */
     private $file_size;
 
     /**
      * @Groups({"main"})
-     * @ORM\Column(type="string", length=255)
-     */
-    private $file_system;
-
-    /**
-     * @Groups({"main"})
      * @ORM\Column(type="datetime")
+     * @Groups({"members_list", "full_user"})
      */
     private $date_updated;
 
     /**
      * @Groups({"main"})
      * @ORM\Column(type="datetime")
+     * @Groups({"members_list", "full_user"})
      */
     private $date_created;
 
     /**
      * @Groups({"main"})
      * @ORM\Column(type="string", length=255, nullable=true)
+     * @Groups({"members_list", "full_user"})
      */
     private $mime_type;
 
@@ -97,6 +96,38 @@ class File
      * @ORM\OneToMany(targetEntity=FileDownload::class, mappedBy="file", orphanRemoval=true)
      */
     private $fileDownloads;
+
+    /**
+     * @ORM\ManyToOne(targetEntity=FileSystem::class, inversedBy="files")
+     * @ORM\JoinColumn(nullable=false)
+     * @Groups({"members_list", "full_user"})
+     */
+    private $file_system;
+
+    /**
+     * @ORM\ManyToOne(targetEntity=User::class, inversedBy="files")
+     * @ORM\JoinColumn(nullable=false)
+     */
+    private $user;
+
+    /**
+     * @Groups({"members_list", "full_user"})
+     */
+    private $public_url;
+
+    /**
+     * @return mixed
+     */
+    public function getPublicUrl()
+    {
+//        switch ($this->getFileSystem()->getName()) {
+//            case S3PublicUploadService::FILE_SYSTEM_NAME;
+//                return sprintf("%s/%s%s", $this->getFileSystem()->getBaseUrl(), $this->getFilename(), $this->getExtension());
+//            default:
+//                return sprintf("%s/%s%s", $this->getFileSystem()->getBaseUrl(), $this->getFilename(), $this->getExtension());
+//        }
+         return sprintf("%s/%s%s", $this->getFileSystem()->getBaseUrl(), $this->getFilename(), $this->getExtension());
+    }
 
     public function __construct()
     {
@@ -116,18 +147,6 @@ class File
     public function setFilename(string $filename): self
     {
         $this->filename = $filename;
-
-        return $this;
-    }
-
-    public function getPath(): ?string
-    {
-        return $this->path;
-    }
-
-    public function setPath(string $path): self
-    {
-        $this->path = $path;
 
         return $this;
     }
@@ -176,18 +195,6 @@ class File
     public function setDateCreated(\DateTimeInterface $date_created): self
     {
         $this->date_created = $date_created;
-
-        return $this;
-    }
-
-    public function getFileSystem(): ?string
-    {
-        return $this->file_system;
-    }
-
-    public function setFileSystem(string $file_system): self
-    {
-        $this->file_system = $file_system;
 
         return $this;
     }
@@ -247,14 +254,14 @@ class File
         return $this;
     }
 
-    public function getFullPath(): ?string
+    public function getTempPath(): ?string
     {
-        return $this->full_path;
+        return $this->temp_path;
     }
 
-    public function setFullPath(string $full_path): self
+    public function setTempPath(string $temp_path): self
     {
-        $this->full_path = $full_path;
+        $this->temp_path = $temp_path;
 
         return $this;
     }
@@ -279,6 +286,30 @@ class File
     public function setMediaType(string $media_type): self
     {
         $this->media_type = $media_type;
+
+        return $this;
+    }
+
+    public function getFileSystem(): ?FileSystem
+    {
+        return $this->file_system;
+    }
+
+    public function setFileSystem(?FileSystem $file_system): self
+    {
+        $this->file_system = $file_system;
+
+        return $this;
+    }
+
+    public function getUser(): ?User
+    {
+        return $this->user;
+    }
+
+    public function setUser(?User $user): self
+    {
+        $this->user = $user;
 
         return $this;
     }

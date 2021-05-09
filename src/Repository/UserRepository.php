@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\User;
+use App\Service\Tools\FileSystem\Public\Upload\S3PublicUploadService;
 use DateTime;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -28,6 +29,15 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
         $this->passwordEncoder = $passwordEncoder;
     }
 
+    public function  findUserProfile(User|UserInterface $user) {
+        return $this->createQueryBuilder("user")
+            ->leftJoin("user.files", "files")
+            ->leftJoin("files.file_system", "file_system")
+            ->where("user = :user")
+            ->andWhere("file_system.name = :file_system_name")
+            ->setParameter("user", $user)
+            ->setParameter("file_system_name", S3PublicUploadService::FILE_SYSTEM_NAME);
+    }
     /**
      * Used to upgrade (rehash) the user's password automatically over time.
      */

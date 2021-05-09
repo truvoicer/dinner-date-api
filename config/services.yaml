@@ -6,6 +6,7 @@
 parameters:
     app.base_url: '%env(SITE_BASE_URL)%'
     app.env: '%env(APP_ENV)%'
+    app.aws.dating_media_public_base_url: 'https://dinner-date-media-public.s3.eu-west-2.amazonaws.com'
 
 services:
     # default configuration for services in *this* file
@@ -14,9 +15,9 @@ services:
         autoconfigure: true # Automatically registers your services as commands, event subscribers, etc.
 
         bind:
-            $publicFilesystem: '@oneup_flysystem.public_filesystem_filesystem'
-            $tempFilesystem: '@oneup_flysystem.temp_filesystem_filesystem'
-            $s3Filesystem: '@oneup_flysystem.s3_filesystem_filesystem'
+            $localPublicFilesystem: '@oneup_flysystem.local_public_filesystem_filesystem'
+            $localTempFilesystem: '@oneup_flysystem.local_temp_filesystem_filesystem'
+            $s3PublicMediaFilesystem: '@oneup_flysystem.s3_public_media_filesystem_filesystem'
             $projectDir: '%kernel.project_dir%'
             $publicDir: '%kernel.project_dir%/var/public'
             $tempDir: '%kernel.project_dir%/var/temp'

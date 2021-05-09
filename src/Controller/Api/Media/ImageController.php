@@ -54,7 +54,7 @@ class ImageController extends BaseController
      * @Route("/upload", methods={"POST"})
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function uploadProfileImage()
+    public function uploadProfileImage(Request $request)
     {
         $this->publicMediaInterface->setUser($this->getUser());
         $upload = $this->publicMediaInterface->mediaUploadHandler();
@@ -66,8 +66,8 @@ class ImageController extends BaseController
         return $this->jsonResponseSuccess(
             "Successfully uploaded profile picture.",
             $this->serializerService->entityToArray(
-                $upload,
-                ["main"]
+                $this->getUser(),
+                ["full_user"]
             )
         );
     }

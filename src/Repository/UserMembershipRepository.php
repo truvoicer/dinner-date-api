@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Entity\User;
 use App\Entity\UserMembership;
 use App\Repository\Helpers\RepositoryHelpers;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
@@ -31,6 +32,20 @@ class UserMembershipRepository extends ServiceEntityRepository
             ->setParameter('membershipName', $membershipName);
         $query = RepositoryHelpers::addQueryBuilderConditions($query, $params);
         return $query->getQuery()->getResult();
+    }
+
+    /**
+     * @return User[] Returns an array of User objects
+     */
+    public function findAllUsersWithMembership(array $params = [])
+    {
+        $query = RepositoryHelpers::addQueryBuilderConditions(
+            $this->createQueryBuilder('user_membership'),
+            $params
+        );
+        return array_map(function (UserMembership $userMembership) {
+            return $userMembership->getUser();
+        }, $query->getQuery()->getResult());
     }
 
 }

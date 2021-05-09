@@ -4,11 +4,15 @@ namespace App\Service\Tools\FileSystem;
 
 use App\Entity\File;
 use App\Entity\FileDownload;
+use App\Entity\FileSystem;
+use App\Entity\User;
 use App\Repository\FileDownloadRepository;
 use App\Repository\FileRepository;
+use App\Repository\FileSystemRepository;
 use App\Service\Tools\HttpRequestService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 class FileSystemCrudService
 {
@@ -16,6 +20,7 @@ class FileSystemCrudService
     private EntityManagerInterface $entityManager;
     private HttpRequestService $httpRequestService;
     private FileRepository $fileRepository;
+    private FileSystemRepository $fileSystemRepository;
     private FileDownloadRepository $fileDownloadRepository;
 
     public function __construct(
@@ -26,6 +31,7 @@ class FileSystemCrudService
         $this->entityManager = $entityManager;
         $this->httpRequestService = $httpRequestService;
         $this->fileRepository = $this->entityManager->getRepository(File::class);
+        $this->fileSystemRepository = $this->entityManager->getRepository(FileSystem::class);
         $this->fileDownloadRepository = $this->entityManager->getRepository(FileDownload::class);
     }
 
@@ -44,17 +50,17 @@ class FileSystemCrudService
         return $file;
     }
 
-    private function getFileObject(File $file, array $data) {
+    private function getFileObject(File $file, FileSystem $fileSystem, User|UserInterface $user, array $data) {
         $file->setMediaCategory($data['media_category']);
         $file->setMediaType($data['media_type']);
         $file->setFilename($data['file_name']);
-        $file->setPath($data['file_path']);
-        $file->setFullPath($data['full_path']);
+        $file->setTempPath($data['temp_path']);
         $file->setFileType($data['file_type']);
         $file->setMimeType($data['mime_type']);
         $file->setExtension($data['file_extension']);
         $file->setFileSize($data['file_size']);
-        $file->setFileSystem($data['file_system']);
+        $file->setFileSystem($fileSystem);
+        $file->setUser($user);
         return $file;
     }
 
@@ -85,9 +91,23 @@ class FileSystemCrudService
         return false;
     }
 
-    public function createFile(array $data)
+    public function createFile(User|UserInterface $user, array $data)
     {
-        $file = $this->getFileObject(new File(), $data);
+        $getFileSystem = $this->fileSystemRepository->findOneBy(["name" => $data["file_system"]]);
+
+        if ($getFileSystem === null) {
+            $fileSystemObject = $this->fileSystemRepository->getFileSystemObject(new FileSystem(), $data["file_system"], null, null);
+            $getFileSystem = $this->fileSystemRepository->saveFileSystem($fileSystemObject);
+        }
+        $getUserCategoryFile = $this->fileRepository->findOneBy([
+            "file_system" => $getFileSystem,
+            "user" => $user
+        ]);
+        if ($getUserCategoryFile === null) {
+            $file = $this->getFileObject(new File(), $getFileSystem, $user, $data);
+        } else {
+            $file = $this->getFileObject($getUserCategoryFile, $getUserCategoryFile->getFileSystem(), $getUserCategoryFile->getUser(), $data);
+        }
         if ($this->httpRequestService->validateData(
             $file
         )) {
@@ -103,7 +123,7 @@ class FileSystemCrudService
             throw new BadRequestHttpException(sprintf("File id:%d not found in database.", $data["id"]));
         }
         if ($this->httpRequestService->validateData(
-            $this->getFileObject($file, $data)
+            $this->getFileObject($file, $file->getFileSystem(), $file->getUser(), $data)
         )) {
             return $this->fileRepository->saveFile($file);
         }

@@ -13,13 +13,13 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 class LocalTempUploadService extends FileSystemServiceBase
 {
-    const FILE_SYSTEM_NAME = "public_filesystem";
+    const FILE_SYSTEM_NAME = "local_temp_filesystem";
 
-    private FilesystemOperator $tempFilesystem;
+    private FilesystemOperator $localTempFilesystem;
     private string $tempDir;
 
     public function __construct(
-        FilesystemOperator $tempFilesystem,
+        FilesystemOperator $localTempFilesystem,
         FileSystemCrudService $fileSystemCrudService,
         ParameterBagInterface $parameterBag,
         string $projectDir,
@@ -27,7 +27,7 @@ class LocalTempUploadService extends FileSystemServiceBase
     )
     {
         parent::__construct($fileSystemCrudService, $parameterBag);
-        $this->tempFilesystem = $tempFilesystem;
+        $this->localTempFilesystem = $localTempFilesystem;
         $this->tempDir = $tempDir;
     }
 
@@ -69,11 +69,11 @@ class LocalTempUploadService extends FileSystemServiceBase
 
     public function readTempFile($filePath): string
     {
-        return $this->tempFilesystem->read($filePath);
+        return $this->localTempFilesystem->read($filePath);
     }
 
     public function readFileStreamFromTemp(string $path) {
-        $resource = $this->tempFilesystem->readStream($path);
+        $resource = $this->localTempFilesystem->readStream($path);
         if ($resource === false) {
             throw new BadRequestHttpException(sprintf("Error opening file stream for path: (%s)", $path));
         }
@@ -83,7 +83,7 @@ class LocalTempUploadService extends FileSystemServiceBase
     public function checkFileExists(string $fileName): bool
     {
         try {
-            return $this->tempFilesystem->fileExists($fileName);
+            return $this->localTempFilesystem->fileExists($fileName);
         } catch (\Exception $e) {
             throw new BadRequestHttpException($e->getMessage());
         } catch (FilesystemException $e) {
@@ -97,7 +97,7 @@ class LocalTempUploadService extends FileSystemServiceBase
     public function deleteFileFromTemp(string $path): bool
     {
         try {
-            $this->tempFilesystem->delete($path);
+            $this->localTempFilesystem->delete($path);
             return $this->checkFileExists($path);
         } catch (\Exception $exception) {
             throw new BadRequestHttpException($exception->getMessage());

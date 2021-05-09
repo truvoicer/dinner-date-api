@@ -69,7 +69,7 @@ class UserController extends BaseController
     {
         return $this->jsonResponseSuccess(
             "success",
-            $this->serializerService->entityToArray($this->getUser())
+            $this->serializerService->entityToArray($this->userService->getUserProfile($this->getUser()))
         );
     }
 

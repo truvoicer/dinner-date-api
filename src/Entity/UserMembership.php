@@ -22,7 +22,6 @@ class UserMembership
     /**
      * @ORM\ManyToOne(targetEntity=User::class, inversedBy="userMemberships")
      * @ORM\JoinColumn(nullable=false)
-     * @Groups({"members_list", "full_user"})
      */
     private $user;
 

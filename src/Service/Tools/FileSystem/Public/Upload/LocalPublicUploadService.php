@@ -12,13 +12,13 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 class LocalPublicUploadService extends FileSystemServiceBase
 {
-    const FILE_SYSTEM_NAME = "public_filesystem";
+    const FILE_SYSTEM_NAME = "local_public_filesystem";
 
-    private FilesystemOperator $publicFilesystem;
+    private FilesystemOperator $localPublicFilesystem;
     private string $publicUploadDir;
 
     public function __construct(
-        FilesystemOperator $publicFilesystem,
+        FilesystemOperator $localPublicFilesystem,
         FileSystemCrudService $fileSystemCrudService,
         ParameterBagInterface $parameterBag,
         string $projectDir,
@@ -26,7 +26,7 @@ class LocalPublicUploadService extends FileSystemServiceBase
     )
     {
         parent::__construct($fileSystemCrudService, $parameterBag);
-        $this->publicFilesystem = $publicFilesystem;
+        $this->localPublicFilesystem = $localPublicFilesystem;
         $this->publicUploadDir = $publicDir . "/uploads";
     }
 
@@ -63,11 +63,11 @@ class LocalPublicUploadService extends FileSystemServiceBase
     }
 
     public function readTempFile($filePath) {
-        return $this->publicFilesystem->read($filePath);
+        return $this->localPublicFilesystem->read($filePath);
     }
 
     public function readFileStreamFromTemp(string $path) {
-        $resource = $this->publicFilesystem->readStream($path);
+        $resource = $this->localPublicFilesystem->readStream($path);
         if ($resource === false) {
             throw new BadRequestHttpException(sprintf("Error opening file stream for path: (%s)", $path));
         }
@@ -75,7 +75,7 @@ class LocalPublicUploadService extends FileSystemServiceBase
     }
 
     public function readFileStreamFromPublic(string $path) {
-        $resource = $this->publicFilesystem->readStream($path);
+        $resource = $this->localPublicFilesystem->readStream($path);
         if ($resource === false) {
             throw new BadRequestHttpException(sprintf("Error opening file stream for path: (%s)", $path));
         }

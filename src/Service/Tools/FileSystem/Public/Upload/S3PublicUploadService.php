@@ -12,18 +12,18 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 class S3PublicUploadService extends FileSystemServiceBase
 {
-    const FILE_SYSTEM_NAME = "s3_filesystem";
+    const FILE_SYSTEM_NAME = "s3_public_media_filesystem";
 
-    private FilesystemOperator $s3Filesystem;
+    private FilesystemOperator $s3PublicMediaFilesystem;
 
     public function __construct(
-        FilesystemOperator $s3Filesystem,
+        FilesystemOperator $s3PublicMediaFilesystem,
         FileSystemCrudService $fileSystemCrudService,
         ParameterBagInterface $parameterBag,
     )
     {
         parent::__construct($fileSystemCrudService, $parameterBag);
-        $this->s3Filesystem = $s3Filesystem;
+        $this->s3PublicMediaFilesystem = $s3PublicMediaFilesystem;
     }
 
     /**
@@ -31,7 +31,9 @@ class S3PublicUploadService extends FileSystemServiceBase
      */
     public function sendToS3($fileName, $content) {
         try {
-            $this->s3Filesystem->writeStream($fileName, $content);
+            $this->s3PublicMediaFilesystem->writeStream($fileName, $content, [
+                "visibility" => "public"
+            ]);
             return $this->checkFileExists($fileName);
         } catch (\Exception $e) {
             throw new BadRequestHttpException($e->getMessage());
@@ -40,7 +42,7 @@ class S3PublicUploadService extends FileSystemServiceBase
 
     public function checkFileExists(string $fileName) {
         try {
-            return $this->s3Filesystem->fileExists($fileName);
+            return $this->s3PublicMediaFilesystem->fileExists($fileName);
         } catch (\Exception $e) {
             throw new BadRequestHttpException($e->getMessage());
         }
@@ -48,7 +50,7 @@ class S3PublicUploadService extends FileSystemServiceBase
 
     public function readFileFromS3(string $fileName) {
         try {
-            return $this->s3Filesystem->readStream($fileName);
+            return $this->s3PublicMediaFilesystem->readStream($fileName);
         } catch (\Exception $e) {
             throw new BadRequestHttpException($e->getMessage());
         }
@@ -56,8 +58,8 @@ class S3PublicUploadService extends FileSystemServiceBase
 
     public function deleteFileFromS3(string $fileName) {
         try {
-            $this->s3Filesystem->delete($fileName);
-            return (!$this->s3Filesystem->fileExists($fileName));
+            $this->s3PublicMediaFilesystem->delete($fileName);
+            return (!$this->s3PublicMediaFilesystem->fileExists($fileName));
         } catch (\Exception $e) {
             throw new BadRequestHttpException($e->getMessage());
         }
