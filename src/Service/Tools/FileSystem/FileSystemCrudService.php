@@ -100,7 +100,7 @@ class FileSystemCrudService
             $getFileSystem = $this->fileSystemRepository->saveFileSystem($fileSystemObject);
         }
         $getUserCategoryFile = $this->fileRepository->findOneBy([
-            "file_system" => $getFileSystem,
+            "media_category" => $data["media_category"],
             "user" => $user
         ]);
         if ($getUserCategoryFile === null) {
