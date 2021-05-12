@@ -45,6 +45,35 @@ class AuthController extends BaseController
      * API user login
      * Returns user api token data
      *
+     * @Route("/external/provider", methods={ "POST" })
+     * @param Request $request
+     * @return Response
+     */
+    public function externalProviderAuth(Request $request): Response
+    {
+        $requestData = $this->httpRequestService->getRequestData($request, true);
+
+        $user = $this->userService->createUser(
+            $this->httpRequestService->getRequestData($request, true)
+        );
+        if (!$user instanceof User) {
+            return $this->jsonResponseFail("User create error", []);
+        }
+        $setApiToken = $this->userService->setUserApiToken($user, "auto");
+        if (!$setApiToken) {
+            return $this->jsonResponseFail("Error generating api token");
+        }
+        return $this->jsonResponseSuccess('Token is valid.', [
+            "user" => $this->serializerService->entityToArray($user, ["single"]),
+            "access_token" => $setApiToken->getToken(),
+            "expires_at" => $setApiToken->getExpiresAt()->getTimestamp()
+        ]);
+    }
+
+    /**
+     * API user login
+     * Returns user api token data
+     *
      * @Route("/login", methods={ "POST" })
      * @param Request $request
      * @return Response
