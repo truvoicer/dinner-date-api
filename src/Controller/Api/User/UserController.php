@@ -129,7 +129,7 @@ class UserController extends BaseController
     {
         return $this->jsonResponseSuccess("success",
             $this->serializerService->entityToArray(
-                $this->userService->setUserApiToken($this->getUser(), "user")
+                $this->userService->setUserApiToken($this->getUser())
             )
         );
     }

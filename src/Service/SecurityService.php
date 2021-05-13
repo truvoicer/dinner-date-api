@@ -1,6 +1,7 @@
 <?php
 namespace App\Service;
 
+use App\Service\Auth\Google\GoogleAuthService;
 use App\Service\Tools\HttpRequestService;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
@@ -9,6 +10,11 @@ class SecurityService
 {
     const SUPPORTED_METHODS = [
         "GET", "POST", "PUT"
+    ];
+
+    const SUPPORTED_TOKEN_PROVIDERS = [
+        "api",
+        GoogleAuthService::AUTH_SERVICE_NAME
     ];
 
     private $httpRequestService;
@@ -44,20 +50,14 @@ class SecurityService
     }
 
     public function getAccessToken(Request $request) {
-        if (strtolower($request->getMethod()) === "post" ||
-            strtolower($request->getMethod()) === "get") {
-            if ($this->checkAuthorizationHeader($request)) {
-                return $this->getTokenFromHeader($request->headers->get('Authorization'));
-            }
-            elseif ($request->getContentType() == "json") {
-                $content = $request->getContent();
-                return json_decode($content)->access_token;
-            } else {
-                return $request->get("access_token");
-            }
-
+        if ($this->checkAuthorizationHeader($request)) {
+            return $this->getTokenFromHeader($request->headers->get('Authorization'));
         }
         return false;
+    }
+
+    public function getTokenProvider(Request $request) {
+        return $this->getTokenFromHeader($request->headers->get('Token-Provider'));
     }
 
     public function getTokenFromHeader($headerValue) {

@@ -6,7 +6,7 @@
 parameters:
     app.base_url: '%env(SITE_BASE_URL)%'
     app.env: '%env(APP_ENV)%'
-    app.aws.dating_media_public_base_url: 'https://dinner-date-media-public.s3.eu-west-2.amazonaws.com'
+    app.aws.dating_media_public_base_url: '%env(AWS_S3_PUBLIC_BASE_URL)%'
 
 services:
     # default configuration for services in *this* file
@@ -54,3 +54,8 @@ services:
                 credentials:
                     key: "AKIA5YIMOI3LDVIULEF7"
                     secret: "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"
+
+    auth.service.google:
+        class: App\Service\Auth\Google\GoogleAuthService
+        public: true
+    App\Service\Auth\Google\GoogleAuthService: '@auth.service.google'

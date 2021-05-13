@@ -30,7 +30,7 @@ class UserProfileRepository extends ServiceEntityRepository
         return $query->getQuery()->getResult();
     }
 
-    public function getUserProfileObject(UserProfile $userProfile, array $data, ?string $password = null)
+    public function getUserProfileObject(UserProfile $userProfile, array $data)
     {
         foreach ($data as $key => $value) {
             $setMethodName = sprintf("set%s", UtilsService::stringToCamelCase($key, true));

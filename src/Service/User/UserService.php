@@ -62,10 +62,16 @@ class UserService extends BaseService
         return $userApiToken;
     }
 
-    public function setUserApiToken(User $user, string $type)
+    public function setUserApiToken(User|UserInterface $user)
     {
         $userApiTokenRepository = $this->em->getRepository(UserApiToken::class);
-        return $userApiTokenRepository->setToken($user, $type);
+        return $userApiTokenRepository->setToken($user);
+    }
+
+    public function setCustomApiToken(User|UserInterface $user, string $type, string $token, \DateTime $expiry)
+    {
+        $userApiTokenRepository = $this->em->getRepository(UserApiToken::class);
+        return $userApiTokenRepository->setCustomToken($user, $type, $token, $expiry);
     }
 
     public function updateApiTokenExpiry(UserApiToken $userApiToken, array $data)
@@ -118,7 +124,13 @@ class UserService extends BaseService
 
     public function updateUserProfile(User|UserInterface $user, array $data)
     {
-        $getUserProfileObject = $this->userProfileRepository->getUserProfileObject($user->getUserProfile(), $data);
+        if ($user->getUserProfile() === null) {
+            $userProfile = new UserProfile();
+            $userProfile->setUser($user);
+            $getUserProfileObject = $this->userProfileRepository->getUserProfileObject($userProfile, $data);
+        } else {
+            $getUserProfileObject = $this->userProfileRepository->getUserProfileObject($user->getUserProfile(), $data);
+        }
         if ($this->httpRequestService->validateData($getUserProfileObject)) {
             return $this->userProfileRepository->updateUserProfile($getUserProfileObject);
         }

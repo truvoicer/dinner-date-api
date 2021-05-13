@@ -43,14 +43,6 @@ class UserApiToken
      */
     private $user;
 
-    public function __construct(User $user, string $type)
-    {
-        $this->token = bin2hex(random_bytes(60));
-        $this->user = $user;
-        $this->expiresAt = new \DateTime('+1 days');
-        $this->setType($type);
-    }
-
     public function getId(): ?int
     {
         return $this->id;
@@ -61,9 +53,12 @@ class UserApiToken
         return $this->token;
     }
 
-    public function getExpiresAt(): ?\DateTimeInterface
+    /**
+     * @param string $token
+     */
+    public function setToken(string $token): void
     {
-        return $this->expiresAt;
+        $this->token = $token;
     }
 
     public function getUser(): ?User
@@ -74,6 +69,7 @@ class UserApiToken
     public function setUser(?User $user): self
     {
         $this->user = $user;
+        return $this;
     }
 
     public function renewExpiresAt()
@@ -85,6 +81,11 @@ class UserApiToken
     {
         $this->expiresAt = $expiresAt;
         return $this;
+    }
+
+    public function getExpiresAt(): ?\DateTimeInterface
+    {
+        return $this->expiresAt;
     }
 
     public function isExpired(): bool
@@ -99,15 +100,11 @@ class UserApiToken
 
     public function setType(string $type): self
     {
-        switch ($type) {
-            case "user":
-                $this->type = "user";
-                break;
-            default:
-                $this->type = "auto";
-                break;
-
-        }
+        $this->type = match ($type) {
+            "google" => "google",
+            "facebook" => "facebook",
+            default => "auto",
+        };
         return $this;
     }
 }

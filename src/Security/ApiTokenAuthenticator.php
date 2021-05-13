@@ -4,7 +4,9 @@ namespace App\Security;
 use App\Entity\User;
 use App\Entity\UserApiToken;
 use App\Repository\UserRepository;
+use App\Service\Auth\ExternalProviderAuthService;
 use App\Service\SecurityService;
+use App\Service\Tools\HttpRequestService;
 use App\Service\User\UserService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -23,13 +25,20 @@ class ApiTokenAuthenticator extends AbstractAuthenticator
 {
     private EntityManagerInterface $em;
     private SecurityService $securityService;
-    private UserRepository $userRepository;
+    private UserService $userService;
+    private ExternalProviderAuthService $externalProviderAuthService;
 
-    public function __construct(EntityManagerInterface $em, SecurityService $securityService)
+    public function __construct(
+        EntityManagerInterface $em,
+        UserService $userService,
+        ExternalProviderAuthService $externalProviderAuthService,
+        SecurityService $securityService
+    )
     {
         $this->securityService = $securityService;
         $this->em = $em;
-        $this->userRepository = $em->getRepository(User::class);
+        $this->userService = $userService;
+        $this->externalProviderAuthService = $externalProviderAuthService;
     }
 
     /**
@@ -44,28 +53,52 @@ class ApiTokenAuthenticator extends AbstractAuthenticator
 
     public function authenticate(Request $request): PassportInterface
     {
-        $accessToken = $this->securityService->getAccessToken($request);
-        if (!$accessToken) {
-            throw new CustomUserMessageAuthenticationException("Error retrieving access token.");
+        $tokenProvider = $this->securityService->getTokenProvider($request);
+        if (
+            !isset($tokenProvider) ||
+            $tokenProvider === "" ||
+            !in_array($tokenProvider, SecurityService::SUPPORTED_TOKEN_PROVIDERS)
+        ) {
+            throw new CustomUserMessageAuthenticationException("Error token provider is invalid or not supported.");
         }
 
-        $token = $this->em->getRepository(UserApiToken::class)
-            ->findOneBy(['token' => $accessToken]);
-        if (!$token) {
-            throw new AuthenticationCredentialsNotFoundException("Token not found");
-        }
-        if (!$token->isExpired()) {
-            throw new CustomUserMessageAuthenticationException("token_expired");
-        }
-
-        return new SelfValidatingPassport(
-            new UserBadge(
-                $token->getUser()->getEmail(),
-                function ($userIdentifier) use($token)  {
-                     return $token->getUser();
+        switch ($tokenProvider) {
+            case "api":
+                $accessToken = $this->securityService->getAccessToken($request);
+                if (!$accessToken) {
+                    throw new CustomUserMessageAuthenticationException("Error retrieving access token.");
                 }
-            )
-        );
+                $token = $this->em->getRepository(UserApiToken::class)
+                    ->findOneBy(['token' => $accessToken]);
+                if (!$token) {
+                    throw new AuthenticationCredentialsNotFoundException("Token not found");
+                }
+                if (!$token->isExpired()) {
+                    throw new CustomUserMessageAuthenticationException("token_expired");
+                }
+                return new SelfValidatingPassport(
+                    new UserBadge(
+                        $token->getUser()->getEmail(),
+                        function ($userIdentifier) use($token)  {
+                            return $token->getUser();
+                        }
+                    )
+                );
+            default:
+                $execute = $this->externalProviderAuthService->validate($tokenProvider);
+                if (!$execute) {
+                    throw new CustomUserMessageAuthenticationException("There was an error authenticating [$tokenProvider] token.");
+                }
+                $findUser = $this->userService->getUserByEmail($execute["email"]);
+                if (!$findUser instanceof User) {
+                    throw new CustomUserMessageAuthenticationException("User no longer exists for this token.");
+                }
+                return new SelfValidatingPassport(
+                    new UserBadge(
+                        $findUser->getEmail()
+                    )
+                );
+        }
     }
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response
