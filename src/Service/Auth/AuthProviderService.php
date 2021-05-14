@@ -6,7 +6,7 @@ use App\Service\BaseService;
 use App\Service\ServiceFactory;
 use Symfony\Component\Security\Core\User\UserInterface;
 
-class ExternalProviderAuthService extends BaseService
+class AuthProviderService extends BaseService
 {
     private ServiceFactory $serviceFactory;
 
@@ -14,9 +14,16 @@ class ExternalProviderAuthService extends BaseService
         $this->serviceFactory = $serviceFactory;
     }
 
-    public function validate(string $provider) {
+    public function validatePostRequest(string $provider) {
         return match ($provider) {
-            "google" => $this->serviceFactory->getService("auth.service.google")->validate(),
+            "google" => $this->serviceFactory->getService("auth.service.google")->validatePostRequest(),
+            default => false,
+        };
+    }
+
+    public function validateTokenRequest(string $provider) {
+        return match ($provider) {
+            "google" => $this->serviceFactory->getService("auth.service.google")->validateTokenRequest(),
             default => false,
         };
     }
@@ -27,12 +34,4 @@ class ExternalProviderAuthService extends BaseService
             default => false,
         };
     }
-
-    public function getToken(string $provider, User|UserInterface $user) {
-        return match ($provider) {
-            "google" => $this->serviceFactory->getService("auth.service.google")->getToken($user),
-            default => false,
-        };
-    }
-
 }

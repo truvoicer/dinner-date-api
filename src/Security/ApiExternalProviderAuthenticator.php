@@ -2,7 +2,7 @@
 namespace App\Security;
 
 use App\Entity\User;
-use App\Service\Auth\ExternalProviderAuthService;
+use App\Service\Auth\AuthProviderService;
 use App\Service\SecurityService;
 use App\Service\Tools\HttpRequestService;
 use App\Service\User\UserService;
@@ -23,12 +23,12 @@ use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPasspor
 class ApiExternalProviderAuthenticator extends AbstractAuthenticator
 {
     private SecurityService $securityService;
-    private ExternalProviderAuthService $externalProviderAuthService;
+    private AuthProviderService $externalProviderAuthService;
     private UserService $userService;
 
     public function __construct(
         SecurityService $securityService,
-        ExternalProviderAuthService $externalProviderAuthService,
+        AuthProviderService $externalProviderAuthService,
         UserService $userService
     )
     {
@@ -50,7 +50,7 @@ class ApiExternalProviderAuthenticator extends AbstractAuthenticator
     public function authenticate(Request $request): PassportInterface
     {
         $requestData = HttpRequestService::getRequestData($request, true);
-        $execute = $this->externalProviderAuthService->validate($requestData["provider"]);
+        $execute = $this->externalProviderAuthService->validatePostRequest($requestData["provider"]);
         if (!$execute) {
             throw new CustomUserMessageAuthenticationException('There was an error authenticating the google account.');
         }

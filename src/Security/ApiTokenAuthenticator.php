@@ -4,7 +4,7 @@ namespace App\Security;
 use App\Entity\User;
 use App\Entity\UserApiToken;
 use App\Repository\UserRepository;
-use App\Service\Auth\ExternalProviderAuthService;
+use App\Service\Auth\AuthProviderService;
 use App\Service\SecurityService;
 use App\Service\Tools\HttpRequestService;
 use App\Service\User\UserService;
@@ -26,12 +26,12 @@ class ApiTokenAuthenticator extends AbstractAuthenticator
     private EntityManagerInterface $em;
     private SecurityService $securityService;
     private UserService $userService;
-    private ExternalProviderAuthService $externalProviderAuthService;
+    private AuthProviderService $externalProviderAuthService;
 
     public function __construct(
         EntityManagerInterface $em,
         UserService $userService,
-        ExternalProviderAuthService $externalProviderAuthService,
+        AuthProviderService $externalProviderAuthService,
         SecurityService $securityService
     )
     {
@@ -54,17 +54,9 @@ class ApiTokenAuthenticator extends AbstractAuthenticator
     public function authenticate(Request $request): PassportInterface
     {
         $tokenProvider = $this->securityService->getTokenProvider($request);
-        if (
-            !isset($tokenProvider) ||
-            $tokenProvider === "" ||
-            !in_array($tokenProvider, SecurityService::SUPPORTED_TOKEN_PROVIDERS)
-        ) {
-            throw new CustomUserMessageAuthenticationException("Error token provider is invalid or not supported.");
-        }
-
         switch ($tokenProvider) {
             case "api":
-                $accessToken = $this->securityService->getAccessToken($request);
+                 $accessToken = $this->securityService->getAccessToken($request);
                 if (!$accessToken) {
                     throw new CustomUserMessageAuthenticationException("Error retrieving access token.");
                 }
@@ -85,7 +77,7 @@ class ApiTokenAuthenticator extends AbstractAuthenticator
                     )
                 );
             default:
-                $execute = $this->externalProviderAuthService->validate($tokenProvider);
+                $execute = $this->externalProviderAuthService->validateTokenRequest(SecurityService::getTokenProvider($request));
                 if (!$execute) {
                     throw new CustomUserMessageAuthenticationException("There was an error authenticating [$tokenProvider] token.");
                 }

@@ -89,6 +89,16 @@ class UserService extends BaseService
         return $this->userApiTokenRepository->findOneBy(["token" => $tokenValue]);
     }
 
+    public function getToken(User|UserInterface $user)
+    {
+        $apiToken = $this->getLatestToken($user);
+        return [
+            "token_provider" => "api",
+            "access_token" => $apiToken->getToken(),
+            "expires_at" => $apiToken->getExpiresAt()->getTimestamp()
+        ];
+    }
+
     public function findUserApiTokensByParams(User|UserInterface $user, string $sort, string $order, int $count)
     {
         return $this->userRepository->findUserApiTokenByParams($user, $sort, $order, $count);

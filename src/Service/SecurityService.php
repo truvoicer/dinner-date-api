@@ -4,6 +4,7 @@ namespace App\Service;
 use App\Service\Auth\Google\GoogleAuthService;
 use App\Service\Tools\HttpRequestService;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
 
 class SecurityService
@@ -40,7 +41,7 @@ class SecurityService
         return false;
     }
 
-    public function checkAuthorizationHeader(Request $request)
+    public static function checkAuthorizationHeader(Request $request)
     {
         if ($request->headers->has("Authorization") &&
         0 == strpos($request->headers->has("Authorization"), "Bearer")) {
@@ -49,18 +50,26 @@ class SecurityService
         return false;
     }
 
-    public function getAccessToken(Request $request) {
-        if ($this->checkAuthorizationHeader($request)) {
-            return $this->getTokenFromHeader($request->headers->get('Authorization'));
+    public static function getAccessToken(Request $request) {
+        if (self::checkAuthorizationHeader($request)) {
+            return SecurityService::getTokenFromHeader($request->headers->get('Authorization'));
         }
         return false;
     }
 
-    public function getTokenProvider(Request $request) {
-        return $this->getTokenFromHeader($request->headers->get('Token-Provider'));
+    public static function getTokenProvider(Request $request) {
+        $tokenProvider = $request->headers->get('Token-Provider');
+        if (
+            !isset($tokenProvider) ||
+            $tokenProvider === "" ||
+            !in_array($tokenProvider, SecurityService::SUPPORTED_TOKEN_PROVIDERS)
+        ) {
+            throw new BadRequestHttpException("Invalid token provider");
+        }
+        return $tokenProvider;
     }
 
-    public function getTokenFromHeader($headerValue) {
+    public static function getTokenFromHeader($headerValue) {
         if ($headerValue === null || $headerValue === "") {
             throw new CustomUserMessageAuthenticationException("Empty authorization header.");
         }

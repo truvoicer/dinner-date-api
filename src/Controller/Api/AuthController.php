@@ -3,16 +3,18 @@
 namespace App\Controller\Api;
 
 use App\Entity\User;
-use App\Service\Auth\ExternalProviderAuthService;
+use App\Service\Auth\AuthProviderService;
 use App\Service\SecurityService;
 use App\Service\Tools\HttpRequestService;
 use App\Service\Tools\SerializerService;
 use App\Service\User\UserService;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Routing\Annotation\Route;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 use Carbon\Carbon;
+use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
 use Symfony\Component\Security\Http\Authenticator\Passport\PassportInterface;
 use Symfony\Component\Security\Http\Authenticator\Passport\UserPassportInterface;
@@ -46,6 +48,7 @@ class AuthController extends BaseController
         $this->userService = $userService;
     }
 
+
     /**
      * API user login
      * Returns user api token data
@@ -54,7 +57,7 @@ class AuthController extends BaseController
      * @param Request $request
      * @return Response
      */
-    public function externalProviderAuth(Request $request, ExternalProviderAuthService $externalProviderAuthService): Response
+    public function externalProviderAuth(Request $request, AuthProviderService $externalProviderAuthService): Response
     {
         $requestData = $this->httpRequestService->getRequestData($request, true);
 
@@ -63,9 +66,8 @@ class AuthController extends BaseController
             $this->getUser()
         );
 
-        $getToken = $externalProviderAuthService->getToken(
-            $requestData["provider"],
-            $this->getUser()
+        $getToken = $externalProviderAuthService->validatePostRequest(
+            $requestData["provider"]
         );
 
         if (!$getToken) {
@@ -115,11 +117,9 @@ class AuthController extends BaseController
      * @param Request $request
      * @return Response
      */
-    public function authTokenValidate(Request $request, SecurityService $securityService, ExternalProviderAuthService $externalProviderAuthService): Response
+    public function authTokenValidate(Request $request, SecurityService $securityService, AuthProviderService $authProviderService): Response
     {
-
-        $execute = $externalProviderAuthService->validate($securityService->getTokenProvider($request));
-        $getToken = $externalProviderAuthService->getToken($securityService->getTokenProvider($request), $this->getUser());
+        $getToken = $authProviderService->validateTokenRequest($securityService->getTokenProvider($request));
         return $this->jsonResponseSuccess('Token is valid.',
             array_merge(
                 [
