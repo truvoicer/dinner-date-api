@@ -7,6 +7,10 @@ parameters:
     app.base_url: '%env(SITE_BASE_URL)%'
     app.env: '%env(APP_ENV)%'
     app.aws.dating_media_public_base_url: '%env(AWS_S3_PUBLIC_BASE_URL)%'
+    app.facebook.app_id: '%env(FACEBOOK_APP_ID)%'
+    app.facebook.app_secret: '%env(FACEBOOK_APP_SECRET)%'
+    app.facebook.graph_version: '%env(FACEBOOK_GRAPH_VERSION)%'
+    app.facebook.redirect_uri: '%env(FACEBOOK_REDIRECT_URI)%'
 
 services:
     # default configuration for services in *this* file
@@ -59,3 +63,8 @@ services:
         class: App\Service\Auth\Google\GoogleAuthService
         public: true
     App\Service\Auth\Google\GoogleAuthService: '@auth.service.google'
+
+    auth.service.facebook:
+        class: App\Service\Auth\Facebook\FacebookAuthService
+        public: true
+    App\Service\Auth\Facebook\FacebookAuthService: '@auth.service.facebook'

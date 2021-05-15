@@ -59,12 +59,6 @@ class UserProfile
      * @ORM\Column(type="string", length=255, nullable=true)
      * @Groups({"members_list", "full_user"})
      */
-    private $country;
-
-    /**
-     * @ORM\Column(type="string", length=255, nullable=true)
-     * @Groups({"members_list", "full_user"})
-     */
     private $city;
 
     /**
@@ -174,6 +168,12 @@ class UserProfile
      */
     private $user;
 
+    /**
+     * @ORM\ManyToOne(targetEntity=Country::class, inversedBy="userProfiles")
+     * @Groups({"members_list", "full_user"})
+     */
+    private $country;
+
 
     public function getId(): ?int
     {
@@ -248,18 +248,6 @@ class UserProfile
     public function setDob(?\DateTimeInterface $dob): self
     {
         $this->dob = $dob;
-
-        return $this;
-    }
-
-    public function getCountry(): ?string
-    {
-        return $this->country;
-    }
-
-    public function setCountry(?string $country): self
-    {
-        $this->country = $country;
 
         return $this;
     }
@@ -498,6 +486,18 @@ class UserProfile
     public function setWeightUnit(?string $weight_unit): self
     {
         $this->weight_unit = $weight_unit;
+
+        return $this;
+    }
+
+    public function getCountry(): ?Country
+    {
+        return $this->country;
+    }
+
+    public function setCountry(?Country $country): self
+    {
+        $this->country = $country;
 
         return $this;
     }

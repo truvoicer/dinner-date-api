@@ -5,18 +5,17 @@ use App\Entity\User;
 use App\Service\Auth\AuthProviderService;
 use App\Service\SecurityService;
 use App\Service\Tools\HttpRequestService;
+use App\Service\Tools\UtilsService;
 use App\Service\User\UserService;
+use Carbon\Carbon;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
-use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 use Symfony\Component\Security\Core\Exception\AuthenticationException;
 use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
 use Symfony\Component\Security\Http\Authenticator\AbstractAuthenticator;
 use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
-use Symfony\Component\Security\Http\Authenticator\Passport\Credentials\PasswordCredentials;
-use Symfony\Component\Security\Http\Authenticator\Passport\Passport;
 use Symfony\Component\Security\Http\Authenticator\Passport\PassportInterface;
 use Symfony\Component\Security\Http\Authenticator\Passport\SelfValidatingPassport;
 
@@ -55,22 +54,30 @@ class ApiExternalProviderAuthenticator extends AbstractAuthenticator
             throw new CustomUserMessageAuthenticationException('There was an error authenticating the google account.');
         }
 
-        $findUser = $this->userService->getUserByEmail($execute["email"]);
-        if ($findUser instanceof User) {
-            return new SelfValidatingPassport(
-                new UserBadge(
-                    $findUser->getEmail()
-                )
-            );
+        $createUser = $this->userService->getUserByEmail($execute["email"]);
+
+        if ($createUser === null) {
+            $password = UtilsService::randomStringGenerator(24);
+            $createUser = $this->userService->createUser([
+                "username" => $execute[AuthProviderService::AUTH_EMAIL],
+                "email" => $execute[AuthProviderService::AUTH_EMAIL],
+                "password" => $password,
+                "confirm_password" => $password,
+                "roles" => ["ROLE_USER"]
+            ]);
+            $this->userService->updateUserProfile($createUser, [
+                "first_name" => $execute[AuthProviderService::AUTH_FIRST_NAME],
+                "last_name" => $execute[AuthProviderService::AUTH_LAST_NAME]
+            ]);
         }
 
-        $createUser = $this->userService->createUser([
-            "username" => $execute["email"],
-            "email" => $execute["email"],
-            "password" => $requestData["access_token"],
-            "confirm_password" => $requestData["access_token"],
-            "roles" => ["ROLE_USER"]
-        ]);
+        $setApiToken = $this->userService->setUserApiToken(
+            $createUser,
+            $execute[AuthProviderService::AUTH_TOKEN_PROVIDER]
+        );
+        if (!$setApiToken) {
+            throw new CustomUserMessageAuthenticationException('Error saving api token.');
+        }
         return new SelfValidatingPassport(
             new UserBadge(
                 $createUser->getEmail()

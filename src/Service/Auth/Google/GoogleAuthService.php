@@ -2,15 +2,12 @@
 
 namespace App\Service\Auth\Google;
 
-use App\Entity\User;
+use App\Service\Auth\AuthProviderService;
 use App\Service\BaseService;
-use App\Service\SecurityService;
 use App\Service\Tools\HttpRequestService;
 use App\Service\User\UserService;
-use Carbon\Carbon;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
-use Symfony\Component\Security\Core\User\UserInterface;
 
 class GoogleAuthService extends BaseService
 {
@@ -45,58 +42,10 @@ class GoogleAuthService extends BaseService
             return false;
         }
         return [
-            "token_provider" => self::AUTH_SERVICE_NAME,
-            "access_token" => $this->requestData["id_token"],
-            "expires_at" => $ticket["exp"],
-            "email" => $ticket["email"],
-        ];
-    }
-
-    public function validateTokenRequest()
-    {
-        $ticket = $this->googleClient->verifyIdToken(
-            SecurityService::getAccessToken($this->request)
-        );
-        if (!is_array($ticket)) {
-            return false;
-        }
-        return [
-            "token_provider" => self::AUTH_SERVICE_NAME,
-            "access_token" => SecurityService::getAccessToken($this->request),
-            "expires_at" => $ticket["exp"],
-            "email" => $ticket["email"],
-        ];
-    }
-
-    public function updateUserProfile(User|UserInterface $user)
-    {
-        return $this->userService->updateUserProfile($user, [
-            "first_name" => $this->requestData["givenName"],
-            "last_name" => $this->requestData["familyName"],
-        ]);
-    }
-
-    public function getTokenFromRequest(User|UserInterface $user)
-    {
-        return [
-            "token_provider" => self::AUTH_SERVICE_NAME,
-            "access_token" => $this->requestData["id_token"],
-            "expires_at" => round($this->requestData["expires_at"] / 1000)
-        ];
-    }
-
-    public function getValidatedToken(User|UserInterface $user)
-    {
-        $ticket = $this->googleClient->verifyIdToken(
-            SecurityService::getAccessToken($this->request)
-        );
-        if (!is_array($ticket)) {
-            return [];
-        }
-        return [
-            "token_provider" => self::AUTH_SERVICE_NAME,
-            "access_token" => $ticket["id_token"],
-            "expires_at" => round($ticket["expires_at"] / 1000)
+            AuthProviderService::AUTH_TOKEN_PROVIDER => self::AUTH_SERVICE_NAME,
+            AuthProviderService::AUTH_ACCESS_TOKEN => $this->requestData["id_token"],
+            AuthProviderService::AUTH_EXPIRES_AT => $ticket["exp"],
+            AuthProviderService::AUTH_EMAIL => $ticket["email"],
         ];
     }
 }

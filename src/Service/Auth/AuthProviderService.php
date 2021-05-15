@@ -1,13 +1,23 @@
 <?php
 namespace App\Service\Auth;
 
-use App\Entity\User;
+use App\Service\Auth\Facebook\FacebookAuthService;
+use App\Service\Auth\Google\GoogleAuthService;
 use App\Service\BaseService;
 use App\Service\ServiceFactory;
-use Symfony\Component\Security\Core\User\UserInterface;
 
 class AuthProviderService extends BaseService
 {
+    const AUTH_TOKEN_PROVIDER = "token_provider";
+    const AUTH_ACCESS_TOKEN = "access_token";
+    const AUTH_EXPIRES_AT = "expires_at";
+    const AUTH_EMAIL = "email";
+    const AUTH_USER = "user";
+
+    const AUTH_FIRST_NAME = "first_name";
+    const AUTH_LAST_NAME = "last_name";
+    const AUTH_PROFILE_PIC_URL = "profile_pic_url";
+
     private ServiceFactory $serviceFactory;
 
     public function __construct(ServiceFactory $serviceFactory) {
@@ -16,21 +26,8 @@ class AuthProviderService extends BaseService
 
     public function validatePostRequest(string $provider) {
         return match ($provider) {
-            "google" => $this->serviceFactory->getService("auth.service.google")->validatePostRequest(),
-            default => false,
-        };
-    }
-
-    public function validateTokenRequest(string $provider) {
-        return match ($provider) {
-            "google" => $this->serviceFactory->getService("auth.service.google")->validateTokenRequest(),
-            default => false,
-        };
-    }
-
-    public function updateUserProfile(string $provider, User|UserInterface $user) {
-        return match ($provider) {
-            "google" => $this->serviceFactory->getService("auth.service.google")->updateUserProfile($user),
+            GoogleAuthService::AUTH_SERVICE_NAME => $this->serviceFactory->getService("auth.service.google")->validatePostRequest(),
+            FacebookAuthService::AUTH_SERVICE_NAME => $this->serviceFactory->getService("auth.service.facebook")->validatePostRequest(),
             default => false,
         };
     }

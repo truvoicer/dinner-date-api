@@ -53,44 +53,26 @@ class ApiTokenAuthenticator extends AbstractAuthenticator
 
     public function authenticate(Request $request): PassportInterface
     {
-        $tokenProvider = $this->securityService->getTokenProvider($request);
-        switch ($tokenProvider) {
-            case "api":
-                 $accessToken = $this->securityService->getAccessToken($request);
-                if (!$accessToken) {
-                    throw new CustomUserMessageAuthenticationException("Error retrieving access token.");
-                }
-                $token = $this->em->getRepository(UserApiToken::class)
-                    ->findOneBy(['token' => $accessToken]);
-                if (!$token) {
-                    throw new AuthenticationCredentialsNotFoundException("Token not found");
-                }
-                if (!$token->isExpired()) {
-                    throw new CustomUserMessageAuthenticationException("token_expired");
-                }
-                return new SelfValidatingPassport(
-                    new UserBadge(
-                        $token->getUser()->getEmail(),
-                        function ($userIdentifier) use($token)  {
-                            return $token->getUser();
-                        }
-                    )
-                );
-            default:
-                $execute = $this->externalProviderAuthService->validateTokenRequest(SecurityService::getTokenProvider($request));
-                if (!$execute) {
-                    throw new CustomUserMessageAuthenticationException("There was an error authenticating [$tokenProvider] token.");
-                }
-                $findUser = $this->userService->getUserByEmail($execute["email"]);
-                if (!$findUser instanceof User) {
-                    throw new CustomUserMessageAuthenticationException("User no longer exists for this token.");
-                }
-                return new SelfValidatingPassport(
-                    new UserBadge(
-                        $findUser->getEmail()
-                    )
-                );
+        $accessToken = $this->securityService->getAccessToken($request);
+        if (!$accessToken) {
+            throw new CustomUserMessageAuthenticationException("Error retrieving access token.");
         }
+        $token = $this->em->getRepository(UserApiToken::class)
+            ->findOneBy(['token' => $accessToken]);
+        if (!$token) {
+            throw new AuthenticationCredentialsNotFoundException("Token not found");
+        }
+        if ($token->isExpired()) {
+            throw new CustomUserMessageAuthenticationException("token_expired");
+        }
+        return new SelfValidatingPassport(
+            new UserBadge(
+                $token->getUser()->getEmail(),
+                function ($userIdentifier) use($token)  {
+                    return $token->getUser();
+                }
+            )
+        );
     }
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $firewallName): ?Response

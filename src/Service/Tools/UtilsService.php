@@ -21,4 +21,21 @@ class UtilsService
         return $str;
     }
 
+    public static function checkArrayField(string $field, array $array = []) {
+        if (array_key_exists($field, $array)) {
+            return $array[$field];
+        }
+        return null;
+    }
+
+    public static function randomStringGenerator(?int $count = 16) {
+        $permitted_chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            $input_length = strlen($permitted_chars);
+            $random_string = '';
+            for($i = 0; $i < $count; $i++) {
+                $random_character = $permitted_chars[random_int(0, $input_length - 1)];
+                $random_string .= $random_character;
+            }
+            return $random_string;
+    }
 }

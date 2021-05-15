@@ -21,7 +21,7 @@ class UserApiToken
 
     /**
      * @Groups({"main", "main_relations"})
-     * @ORM\Column(type="string", length=255)
+     * @ORM\Column(type="text")
      */
     private $token;
 
@@ -90,7 +90,7 @@ class UserApiToken
 
     public function isExpired(): bool
     {
-        return $this->getExpiresAt() >= new \DateTime();
+        return new \DateTime() > $this->getExpiresAt();
     }
 
     public function getType(): ?string

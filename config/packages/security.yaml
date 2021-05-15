@@ -15,10 +15,6 @@ security:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
-
-        auth_external_provider_validate:
-            pattern: ^/api/auth/external/provider/validate
-            security: false
         auth_external_provider:
             pattern: ^/api/auth/external/provider
             custom_authenticators:

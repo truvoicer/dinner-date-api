@@ -22,29 +22,14 @@ class UserApiTokenRepository extends ServiceEntityRepository
         parent::__construct($registry, UserApiToken::class);
     }
 
-    public function setToken(User $user) {
+    public function setToken(User $user, string $type) {
         try {
             $apiToken = new UserApiToken();
             $apiToken->setToken(bin2hex(random_bytes(60)));
             $apiToken->setExpiresAt( new \DateTime('+1 days'));
             $apiToken->setUser($user);
-            $apiToken->setType("auto");
-
-            $this->getEntityManager()->persist($apiToken);
-            $this->getEntityManager()->flush();
-            return $apiToken;
-        } catch (ORMException $e) {
-            throw new ORMException("ORM Exception... " . $e->getMessage());
-        }
-    }
-
-    public function setCustomToken(User $user, string $type, string $token, \DateTime $expiry) {
-        try {
-            $apiToken = new UserApiToken();
-            $apiToken->setToken($token);
-            $apiToken->setExpiresAt($expiry);
-            $apiToken->setUser($user);
             $apiToken->setType($type);
+
             $this->getEntityManager()->persist($apiToken);
             $this->getEntityManager()->flush();
             return $apiToken;

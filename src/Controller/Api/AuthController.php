@@ -10,14 +10,8 @@ use App\Service\Tools\SerializerService;
 use App\Service\User\UserService;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Routing\Annotation\Route;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
 use Carbon\Carbon;
-use Symfony\Component\Security\Core\Exception\CustomUserMessageAuthenticationException;
-use Symfony\Component\Security\Http\Authenticator\Passport\Badge\UserBadge;
-use Symfony\Component\Security\Http\Authenticator\Passport\PassportInterface;
-use Symfony\Component\Security\Http\Authenticator\Passport\UserPassportInterface;
 
 /**
  * Contains api endpoint functions for user account tasks via email password login
@@ -57,30 +51,21 @@ class AuthController extends BaseController
      * @param Request $request
      * @return Response
      */
-    public function externalProviderAuth(Request $request, AuthProviderService $externalProviderAuthService): Response
+    public function externalProviderAuth(Request $request): Response
     {
-        $requestData = $this->httpRequestService->getRequestData($request, true);
-
-        $externalProviderAuthService->updateUserProfile(
-            $requestData["provider"],
-            $this->getUser()
-        );
-
-        $getToken = $externalProviderAuthService->validatePostRequest(
-            $requestData["provider"]
-        );
-
-        if (!$getToken) {
-            return $this->jsonResponseFail("Error generating api token");
+        $requestData = HttpRequestService::getRequestData($request, true);
+        $apiToken = $this->userService->getLatestToken($this->getUser());
+        if ($apiToken === null) {
+            return $this->jsonResponseFail("Token not found or expired");
         }
-
+        $this->userService->deleteUserExpiredTokens($this->getUser());
         return $this->jsonResponseSuccess('Token is valid.',
-            array_merge(
-                [
-                    "user" => $this->serializerService->entityToArray($this->getUser(), ["single"])
-                ],
-                $getToken
-            )
+            [
+                AuthProviderService::AUTH_USER => $this->serializerService->entityToArray($this->getUser(), ["single"]),
+                AuthProviderService::AUTH_TOKEN_PROVIDER => $requestData["provider"],
+                AuthProviderService::AUTH_ACCESS_TOKEN => $apiToken->getToken(),
+                AuthProviderService::AUTH_EXPIRES_AT => $apiToken->getExpiresAt()->getTimestamp(),
+            ]
         );
     }
 
@@ -98,14 +83,14 @@ class AuthController extends BaseController
         $user = $this->userService->getUserByEmail($requestData["email"]);
         $apiToken = $this->userService->getLatestToken($user);
         if ($apiToken === null) {
-            $apiToken = $this->userService->setUserApiToken($user);
+            $apiToken = $this->userService->setUserApiToken($user, UserService::LOCAL_API_TYPE);
         }
         $this->userService->deleteUserExpiredTokens($user);
         return $this->jsonResponseSuccess('Successfully logged in.', [
-            "token_provider" => "api",
-            "access_token" => $apiToken->getToken(),
-            "expires_at" => $apiToken->getExpiresAt()->getTimestamp(),
-            "user" => $this->serializerService->entityToArray($user, ["single"])
+            AuthProviderService::AUTH_USER => $this->serializerService->entityToArray($user, ["single"]),
+            AuthProviderService::AUTH_TOKEN_PROVIDER => "api",
+            AuthProviderService::AUTH_ACCESS_TOKEN => $apiToken->getToken(),
+            AuthProviderService::AUTH_EXPIRES_AT => $apiToken->getExpiresAt()->getTimestamp(),
         ]);
     }
 
@@ -117,16 +102,20 @@ class AuthController extends BaseController
      * @param Request $request
      * @return Response
      */
-    public function authTokenValidate(Request $request, SecurityService $securityService, AuthProviderService $authProviderService): Response
+    public function authTokenValidate(Request $request): Response
     {
-        $getToken = $authProviderService->validateTokenRequest($securityService->getTokenProvider($request));
+        $apiToken = $this->userService->getLatestToken($this->getUser());
+        if ($apiToken === null) {
+            return $this->jsonResponseFail("Token not found or expired");
+        }
+        $this->userService->deleteUserExpiredTokens($this->getUser());
         return $this->jsonResponseSuccess('Token is valid.',
-            array_merge(
-                [
-                    "user" => $this->serializerService->entityToArray($this->getUser(), ["single"])
-                ],
-                $getToken
-            )
+            [
+                AuthProviderService::AUTH_USER => $this->serializerService->entityToArray($this->getUser(), ["single"]),
+                AuthProviderService::AUTH_TOKEN_PROVIDER => SecurityService::getTokenProviderFromHeader($request),
+                AuthProviderService::AUTH_ACCESS_TOKEN => $apiToken->getToken(),
+                AuthProviderService::AUTH_EXPIRES_AT => $apiToken->getExpiresAt()->getTimestamp(),
+            ]
         );
     }
 
@@ -141,14 +130,15 @@ class AuthController extends BaseController
     {
         $requestData = $this->httpRequestService->getRequestData($request, true);
         $user = $this->userService->getUserByEmail($requestData["email"]);
-        $setApiToken = $this->userService->setUserApiToken($user);
+        $setApiToken = $this->userService->setUserApiToken($user, UserService::LOCAL_API_TYPE);
         if (!$setApiToken) {
             return $this->jsonResponseFail("Error generating api token");
         }
         return $this->jsonResponseSuccess("Api token", [
-            "token: " => $setApiToken->getToken(),
-            "expiresAt" => $setApiToken->getExpiresAt()->format("Y-m-d H:i:s"),
-            "email" => $setApiToken->getuser()->getEmail()
+            AuthProviderService::AUTH_USER => $this->serializerService->entityToArray($user, ["single"]),
+            AuthProviderService::AUTH_TOKEN_PROVIDER => "api",
+            AuthProviderService::AUTH_ACCESS_TOKEN => $setApiToken->getToken(),
+            AuthProviderService::AUTH_EXPIRES_AT => $setApiToken->getExpiresAt()->getTimestamp()
         ]);
     }
 
@@ -167,14 +157,15 @@ class AuthController extends BaseController
         if (!$user instanceof User) {
             return $this->jsonResponseFail("User create error", []);
         }
-        $setApiToken = $this->userService->setUserApiToken($user);
+        $setApiToken = $this->userService->setUserApiToken($user, UserService::LOCAL_API_TYPE);
         if (!$setApiToken) {
             return $this->jsonResponseFail("Error generating api token");
         }
         return $this->jsonResponseSuccess('Token is valid.', [
-            "user" => $this->serializerService->entityToArray($user, ["single"]),
-            "access_token" => $setApiToken->getToken(),
-            "expires_at" => $setApiToken->getExpiresAt()->getTimestamp()
+            AuthProviderService::AUTH_USER => $this->serializerService->entityToArray($user, ["single"]),
+            AuthProviderService::AUTH_TOKEN_PROVIDER => "api",
+            AuthProviderService::AUTH_ACCESS_TOKEN => $setApiToken->getToken(),
+            AuthProviderService::AUTH_EXPIRES_AT => $setApiToken->getExpiresAt()->getTimestamp()
         ]);
     }
 }

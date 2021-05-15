@@ -20,6 +20,15 @@ class CountryRepository extends ServiceEntityRepository
         parent::__construct($registry, Country::class);
     }
 
+    public function findByParamsArray(array $conditions = [])
+    {
+        return RepositoryHelpers::addQueryBuilderConditions(
+            $this->createQueryBuilder('country'), $conditions
+        )
+            ->getQuery()
+            ->getArrayResult();
+    }
+
     public function findByParams(array $conditions = [])
     {
         return RepositoryHelpers::addQueryBuilderConditions(

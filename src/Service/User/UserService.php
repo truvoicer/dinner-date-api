@@ -19,6 +19,7 @@ use Symfony\Component\Security\Core\User\UserInterface;
 
 class UserService extends BaseService
 {
+    const LOCAL_API_TYPE = "api";
 
     protected EntityManagerInterface $em;
     protected UserRepository $userRepository;
@@ -62,16 +63,10 @@ class UserService extends BaseService
         return $userApiToken;
     }
 
-    public function setUserApiToken(User|UserInterface $user)
+    public function setUserApiToken(User|UserInterface $user, string $type)
     {
         $userApiTokenRepository = $this->em->getRepository(UserApiToken::class);
-        return $userApiTokenRepository->setToken($user);
-    }
-
-    public function setCustomApiToken(User|UserInterface $user, string $type, string $token, \DateTime $expiry)
-    {
-        $userApiTokenRepository = $this->em->getRepository(UserApiToken::class);
-        return $userApiTokenRepository->setCustomToken($user, $type, $token, $expiry);
+        return $userApiTokenRepository->setToken($user, $type);
     }
 
     public function updateApiTokenExpiry(UserApiToken $userApiToken, array $data)
@@ -161,7 +156,7 @@ class UserService extends BaseService
         return $this->userRepository->deleteUser($user);
     }
 
-    public function deleteUserExpiredTokens(User $user)
+    public function deleteUserExpiredTokens(User|UserInterface $user)
     {
         return $this->userApiTokenRepository->deleteUserExpiredTokens($user);
     }

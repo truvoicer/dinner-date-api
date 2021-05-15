@@ -2,6 +2,7 @@
 
 namespace App\DataFixtures;
 
+use App\Entity\Country;
 use App\Entity\FileSystem;
 use App\Entity\Membership;
 use App\Entity\User;
@@ -22,6 +23,7 @@ use App\Service\Tools\FileSystem\Public\Upload\LocalPublicUploadService;
 use App\Service\Tools\FileSystem\Public\Upload\LocalTempUploadService;
 use App\Service\Tools\FileSystem\Public\Upload\S3PublicUploadService;
 use Doctrine\Bundle\FixturesBundle\Fixture;
+use Doctrine\ORM\EntityManagerInterface;
 use Doctrine\Persistence\ObjectManager;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 
@@ -52,12 +54,15 @@ class UserFixtures extends Fixture
         ],
     ];
     protected UserPasswordEncoderInterface $passwordEncoder;
+    protected EntityManagerInterface $entityManager;
 
     public function __construct(
-        UserPasswordEncoderInterface $passwordEncoder
+        UserPasswordEncoderInterface $passwordEncoder,
+        EntityManagerInterface $entityManager
     )
     {
         $this->passwordEncoder = $passwordEncoder;
+        $this->entityManager = $entityManager;
     }
 
     public function load(ObjectManager $manager)
@@ -73,6 +78,12 @@ class UserFixtures extends Fixture
         $smokingStatus = SmokingStatus::getData();
         $weightUnits = WeightUnits::getData();
         $heightUnits = HeightUnits::getData();
+
+        $countriesSql = file_get_contents("/var/www/html/resources/sql/countries.sql");
+        $this->entityManager->getConnection()->executeQuery($countriesSql);
+
+        $countryRepo = $manager->getRepository(Country::class);
+        $countriesArray = $countryRepo->findByParamsArray();
 
         foreach (self::MEMBERSHIPS as $name => $label) {
             $membershipModel = new Membership();
@@ -129,8 +140,10 @@ class UserFixtures extends Fixture
             $userProfile->setAddress($faker->address);
             $userProfile->setBodyType($bodyTypes[mt_rand(0, count($bodyTypes) - 1)]);
             $userProfile->setCity($faker->city);
-            $userProfile->setCountry($country);
-            $userProfile->setEthnicity($country);
+
+            $countryEntity = $countryRepo->find($countriesArray[mt_rand(0, count($countriesArray) - 1)]["id"]);
+            $userProfile->setCountry($countryEntity);
+            $userProfile->setEthnicity($countryEntity->getName());
             $userProfile->setEyeColor($eyeColor[mt_rand(0, count($eyeColor) - 1)]);
             $userProfile->setGender($genders[mt_rand(0, count($genders) - 1)]);
             $userProfile->setGenderPreference($genderPreferences[mt_rand(0, count($genderPreferences) - 1)]);

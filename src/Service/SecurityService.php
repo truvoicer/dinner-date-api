@@ -1,6 +1,7 @@
 <?php
 namespace App\Service;
 
+use App\Service\Auth\Facebook\FacebookAuthService;
 use App\Service\Auth\Google\GoogleAuthService;
 use App\Service\Tools\HttpRequestService;
 use Symfony\Component\HttpFoundation\Request;
@@ -15,6 +16,7 @@ class SecurityService
 
     const SUPPORTED_TOKEN_PROVIDERS = [
         "api",
+        FacebookAuthService::AUTH_SERVICE_NAME,
         GoogleAuthService::AUTH_SERVICE_NAME
     ];
 
@@ -57,7 +59,7 @@ class SecurityService
         return false;
     }
 
-    public static function getTokenProvider(Request $request) {
+    public static function getTokenProviderFromHeader(Request $request) {
         $tokenProvider = $request->headers->get('Token-Provider');
         if (
             !isset($tokenProvider) ||

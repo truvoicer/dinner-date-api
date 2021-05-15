@@ -2,11 +2,13 @@
 
 namespace App\Repository;
 
+use App\Entity\Country;
 use App\Entity\User;
 use App\Entity\UserProfile;
 use App\Service\Tools\UtilsService;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
@@ -37,6 +39,13 @@ class UserProfileRepository extends ServiceEntityRepository
             if (method_exists($userProfile, $setMethodName)) {
                 if ($key === "dob") {
                     $value = new \DateTime($value);
+                }
+                if ($key === "country") {
+                    $findCountry = $this->getEntityManager()->getRepository(Country::class)->find(((int)$value));
+                    if ($findCountry === null) {
+                        throw new BadRequestHttpException("Country doesn't exist in system.");
+                    }
+                    $value = $findCountry;
                 }
                 $userProfile->$setMethodName($value);
             }

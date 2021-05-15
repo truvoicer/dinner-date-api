@@ -29,7 +29,8 @@
         "symfony/security-bundle": "5.2.*",
         "symfony/serializer": "5.2.*",
         "symfony/validator": "5.2.*",
-        "symfony/yaml": "5.2.*"
+        "symfony/yaml": "5.2.*",
+        "league/oauth2-facebook": "^2.0"
     },
     "config": {
         "optimize-autoloader": true,
