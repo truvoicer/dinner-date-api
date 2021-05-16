@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Controller\Api\Media;
+namespace App\Controller\Api\User\Media;
 
 use App\Controller\Api\BaseController;
 use App\Entity\UserApiToken;
@@ -21,9 +21,9 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
  *
  * @IsGranted("ROLE_USER")
  *
- * @Route("/api/media/image")
+ * @Route("/api/user/{user}/media")
  */
-class ImageController extends BaseController
+class MediaController extends BaseController
 {
     private MemberService $memberService;
     private PublicMediaInterface $publicMediaInterface;
@@ -32,7 +32,6 @@ class ImageController extends BaseController
      * AdminController constructor.
      * Initialises services used in this controller
      *
-     * @param UserService $userService
      * @param SerializerService $serializerService
      * @param HttpRequestService $httpRequestService
      */
@@ -51,11 +50,30 @@ class ImageController extends BaseController
     /**
      * Gets a single user based on the id in the request url
      *
+     * @Route("/fetch", methods={"POST"})
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     */
+    public function fetchPublicMedia()
+    {
+        $this->publicMediaInterface->setUser($this->getUser());
+        return $this->jsonResponseSuccess(
+            "Media fetch.",
+            $this->serializerService->entityToArray(
+                $this->publicMediaInterface->mediaFetchHandler(),
+                ["full_media"]
+            )
+        );
+    }
+
+    /**
+     * Gets a single user based on the id in the request url
+     *
      * @Route("/upload", methods={"POST"})
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function uploadProfileImage(Request $request)
+    public function uploadPublicMedia(Request $request)
     {
+        $requestData = HttpRequestService::getRequestData($request);
         $this->publicMediaInterface->setUser($this->getUser());
         $upload = $this->publicMediaInterface->mediaUploadHandler();
         if(!$upload) {
@@ -63,13 +81,24 @@ class ImageController extends BaseController
                 "Error uploading profile picture, try again."
             );
         }
-        return $this->jsonResponseSuccess(
-            "Successfully uploaded profile picture.",
-            $this->serializerService->entityToArray(
-                $this->getUser(),
-                ["full_user"]
-            )
-        );
+        return match ($requestData["upload_type"]) {
+            "media" => $this->jsonResponseSuccess(
+                "Successfully uploaded media.",
+                $this->serializerService->entityToArray(
+                    $this->publicMediaInterface->getFileSystemCrudService()->findUserFilesByMediaCategory(
+                        $this->getUser(), $requestData["media_category"]
+                    ),
+                    ["full_media"]
+                )
+            ),
+            default => $this->jsonResponseSuccess(
+                "Successfully uploaded profile picture.",
+                $this->serializerService->entityToArray(
+                    $this->getUser(),
+                    ["full_user"]
+                )
+            ),
+        };
     }
 
     /**
@@ -78,7 +107,7 @@ class ImageController extends BaseController
      * @Route("/delete", methods={"POST"})
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function deleteProfileImage()
+    public function deletePublicMedia()
     {
         $this->publicMediaInterface->setUser($this->getUser());
         $delete = $this->publicMediaInterface->mediaDeleteHandler();

@@ -18,7 +18,7 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\IsGranted;
  *
  * @IsGranted("ROLE_USER")
  *
- * @Route("/api/user")
+ * @Route("/api/user/{user}")
  */
 class UserController extends BaseController
 {

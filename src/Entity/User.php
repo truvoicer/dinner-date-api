@@ -88,11 +88,17 @@ class User implements UserInterface
      */
     private $files;
 
+    /**
+     * @ORM\OneToMany(targetEntity=UserMediaCollection::class, mappedBy="user", orphanRemoval=true)
+     */
+    private $userMediaCollections;
+
     public function __construct()
     {
         $this->userPermissions = new ArrayCollection();
         $this->userMemberships = new ArrayCollection();
         $this->files = new ArrayCollection();
+        $this->userMediaCollections = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -329,6 +335,36 @@ class User implements UserInterface
             // set the owning side to null (unless already changed)
             if ($file->getUser() === $this) {
                 $file->setUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|UserMediaCollection[]
+     */
+    public function getUserMediaCollections(): Collection
+    {
+        return $this->userMediaCollections;
+    }
+
+    public function addUserMediaCollection(UserMediaCollection $userMediaCollection): self
+    {
+        if (!$this->userMediaCollections->contains($userMediaCollection)) {
+            $this->userMediaCollections[] = $userMediaCollection;
+            $userMediaCollection->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeUserMediaCollection(UserMediaCollection $userMediaCollection): self
+    {
+        if ($this->userMediaCollections->removeElement($userMediaCollection)) {
+            // set the owning side to null (unless already changed)
+            if ($userMediaCollection->getUser() === $this) {
+                $userMediaCollection->setUser(null);
             }
         }
 

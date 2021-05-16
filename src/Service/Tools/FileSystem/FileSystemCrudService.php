@@ -50,11 +50,19 @@ class FileSystemCrudService
         return $file;
     }
 
+    public function findUserFilesByMediaCategory(User|UserInterface $user, $mediaCategory, array $conditions = [])
+    {
+        if (is_string($mediaCategory)) {
+            $mediaCategory = [$mediaCategory];
+        }
+        return $this->fileRepository->findUserFilesByMediaCategory($user, $mediaCategory, $conditions);
+    }
+
     private function getFileObject(File $file, FileSystem $fileSystem, User|UserInterface $user, array $data) {
         $file->setMediaCategory($data['media_category']);
         $file->setMediaType($data['media_type']);
         $file->setFilename($data['file_name']);
-        $file->setTempPath($data['temp_path']);
+        $file->setPath($data['path']);
         $file->setFileType($data['file_type']);
         $file->setMimeType($data['mime_type']);
         $file->setExtension($data['file_extension']);
@@ -91,7 +99,7 @@ class FileSystemCrudService
         return false;
     }
 
-    public function createFile(User|UserInterface $user, array $data)
+    public function createFile(User|UserInterface $user, array $data, $replace = false)
     {
         $getFileSystem = $this->fileSystemRepository->findOneBy(["name" => $data["file_system"]]);
 
@@ -103,7 +111,7 @@ class FileSystemCrudService
             "media_category" => $data["media_category"],
             "user" => $user
         ]);
-        if ($getUserCategoryFile === null) {
+        if ($getUserCategoryFile === null || !$replace) {
             $file = $this->getFileObject(new File(), $getFileSystem, $user, $data);
         } else {
             $file = $this->getFileObject($getUserCategoryFile, $getUserCategoryFile->getFileSystem(), $getUserCategoryFile->getUser(), $data);

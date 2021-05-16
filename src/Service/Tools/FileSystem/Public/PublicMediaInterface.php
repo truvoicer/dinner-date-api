@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Service\Tools\FileSystem\Public;
 
 use App\Entity\User;
@@ -12,6 +13,7 @@ use GuzzleHttp\Psr7\UploadedFile;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 class PublicMediaInterface
@@ -29,6 +31,7 @@ class PublicMediaInterface
     protected LocalPublicUploadService $localPublicUploadService;
     protected LocalTempUploadService $localTempUploadService;
     protected FileSystemCrudService $fileSystemCrudService;
+    private bool $overwrite = false;
 
     public function __construct(
         RequestStack $request,
@@ -40,7 +43,7 @@ class PublicMediaInterface
     )
     {
         $this->request = $request->getCurrentRequest();
-        $this->requestData = HttpRequestService::getRequestData($this->request);
+        $this->requestData = HttpRequestService::getRequestData($this->request, true);
         $this->s3PublicUploadService = $s3PublicUploadService;
         $this->localPublicDownloadService = $localPublicDownloadService;
         $this->localPublicUploadService = $localPublicUploadService;
@@ -48,69 +51,113 @@ class PublicMediaInterface
         $this->fileSystemCrudService = $fileSystemCrudService;
     }
 
-    public function mediaUploadHandler() {
+    public function mediaFetchHandler(array $conditions = [])
+    {
+        return $this->fileSystemCrudService->findUserFilesByMediaCategory(
+            $this->user,
+            $this->requestData["media_category"],
+            $this->request->query->all()
+        );
+    }
+
+    public function mediaUploadHandler()
+    {
         switch ($this->requestData["media_category"]) {
             case "profile_cover":
             case "profile_pic":
-                return $this->profileImageUploadHandler();
+                $this->overwrite = true;
+                return $this->s3PublicMediaImageUploadHandler();
+            case "media_photo":
+                $this->overwrite = false;
+                return $this->s3PublicMediaImageUploadHandler();
         }
     }
 
-    public function mediaDeleteHandler() {
+    public function mediaDeleteHandler()
+    {
         switch ($this->requestData["media_category"]) {
             case "profile_cover":
             case "profile_pic":
-                return $this->profileImageDeleteHandler();
+            case "media_photo":
+                return $this->s3PublicMediaDeleteHandler();
         }
     }
 
-    protected function profileImageDeleteHandler() {
+    protected function s3PublicMediaDeleteHandler()
+    {
         $file = $this->fileSystemCrudService->getFileById($this->requestData["file_id"]);
-        if(!$this->s3PublicUploadService->deleteFileFromS3($file->getFilename() . $file->getExtension())) {
+        if (!$this->s3PublicUploadService->deleteFileFromS3($file->getPath())) {
             return false;
         }
         return $this->fileSystemCrudService->deleteFile($file);
     }
 
-    protected function profileImageUploadHandler() {
-        $file = $this->request->files->get("file");
-        if (!self::validateImageFile($file)) {
-            return false;
-        }
-        $getPath =  $this->localTempUploadService->moveToTempDir(
-            $file,
-            $this->buildFileName($this->requestData["media_category"]),
-            self::ALLOWED_IMAGE_MIME_TYPES[$file->getClientMimeType()]
+    protected function s3PublicMediaImageUploadHandler()
+    {
+        return $this->s3PublicMediaUploadHandler(
+            "image",
+            self::ALLOWED_IMAGE_MIME_TYPES
         );
-        $fileName = $getPath["filename"] . $getPath["ext"];
-        $content = $this->localTempUploadService->readFileStreamFromTemp($getPath["full_filename"]);
-
-        if(!$this->s3PublicUploadService->sendToS3($fileName, $content)) {
-            return false;
-        }
-
-        if (!$this->localTempUploadService->deleteFileFromTemp($getPath["full_filename"])) {
-
-        }
-        return $this->fileSystemCrudService->createFile($this->getUser(), [
-            'media_category' => $this->requestData["media_category"],
-            'media_type' => "image",
-            'file_name' => $getPath["filename"],
-            'file_url' => $getPath["full_filename"],
-            'temp_path' => $getPath["path"],
-            'file_type' => ltrim($getPath["ext"], "."),
-            'mime_type' => $getPath["mime_type"],
-            'file_extension' => $getPath["ext"],
-            'file_size' => $getPath["file_size"],
-            'file_system' => S3PublicUploadService::FILE_SYSTEM_NAME,
-        ]);
     }
 
-    public static function validateImageFile(\Symfony\Component\HttpFoundation\File\UploadedFile $file) {
+    protected function s3PublicMediaUploadHandler(string $mediaType, array $allowedMimeTypes = [])
+    {
+        $uploadedFile = $this->request->files->get("file");
+        if (!self::validateImageFile($uploadedFile)) {
+            return false;
+        }
+        $mimeType = $uploadedFile->getClientMimeType();
+        if (!array_key_exists($mimeType, $allowedMimeTypes)) {
+            throw new BadRequestHttpException(
+                sprintf(
+                    "Uploaded file mime type [%s] is not allowed for media [%s]",
+                    $mimeType, $mediaType
+                )
+            );
+        }
+
+        $ext = $allowedMimeTypes[$mimeType];
+        $category = $this->requestData["media_category"];
+        $fileName = $this->buildFileName($category);
+        $filePath = "/" . $this->user->getId() . "/" . $category . "/" . $fileName . $ext;
+
+        $getTempPath = $this->localTempUploadService->moveToTempDir($uploadedFile, $filePath);
+        if (!$getTempPath) {
+            throw new BadRequestHttpException("Error processing file upload");
+        }
+
+        $content = $this->localTempUploadService->readFileStreamFromTemp($filePath);
+        if (!$this->s3PublicUploadService->sendToS3($filePath, $content)) {
+            return false;
+        }
+
+        $this->localTempUploadService->deleteFileFromTemp($filePath);
+
+        return $this->fileSystemCrudService->createFile(
+            $this->getUser(),
+            [
+                'media_category' => $category,
+                'media_type' => $mediaType,
+                'file_name' => $fileName,
+                'path' => $filePath,
+                'file_type' => ltrim($ext, "."),
+                'mime_type' => $uploadedFile->getMimeType(),
+                'file_extension' => $ext,
+                'file_size' => $uploadedFile->getSize(),
+                'file_system' => S3PublicUploadService::FILE_SYSTEM_NAME,
+            ],
+            $this->overwrite
+        );
+
+    }
+
+    public static function validateImageFile(\Symfony\Component\HttpFoundation\File\UploadedFile $file)
+    {
         return array_key_exists($file->getClientMimeType(), self::ALLOWED_IMAGE_MIME_TYPES);
     }
 
-    private function buildFileName(string $mediaCategory) {
+    private function buildFileName(string $mediaCategory)
+    {
         $date = new \DateTime();
         return sprintf(
             "%d_%s_%s",
@@ -134,5 +181,13 @@ class PublicMediaInterface
     public function setUser(UserInterface|User $user): void
     {
         $this->user = $user;
+    }
+
+    /**
+     * @return FileSystemCrudService
+     */
+    public function getFileSystemCrudService(): FileSystemCrudService
+    {
+        return $this->fileSystemCrudService;
     }
 }

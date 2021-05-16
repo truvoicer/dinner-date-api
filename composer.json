@@ -16,6 +16,7 @@
         "fzaninotto/faker": "^1.5",
         "google/apiclient": "^2.7",
         "league/flysystem-aws-s3-v3": "^2.0",
+        "league/oauth2-facebook": "^2.0",
         "nelmio/cors-bundle": "^2.1",
         "nesbot/carbon": "^2.48",
         "oneup/flysystem-bundle": "^4.0",
@@ -25,12 +26,12 @@
         "symfony/flex": "^1.3.1",
         "symfony/framework-bundle": "5.2.*",
         "symfony/mime": "5.2.*",
+        "symfony/monolog-bundle": "^3.7",
         "symfony/proxy-manager-bridge": "5.2.*",
         "symfony/security-bundle": "5.2.*",
         "symfony/serializer": "5.2.*",
         "symfony/validator": "5.2.*",
-        "symfony/yaml": "5.2.*",
-        "league/oauth2-facebook": "^2.0"
+        "symfony/yaml": "5.2.*"
     },
     "config": {
         "optimize-autoloader": true,

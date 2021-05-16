@@ -3,9 +3,12 @@
 namespace App\Repository;
 
 use App\Entity\File;
+use App\Entity\User;
+use App\Repository\Helpers\RepositoryHelpers;
 use DateTime;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
  * @method File|null find($id, $lockMode = null, $lockVersion = null)
@@ -20,16 +23,29 @@ class FileRepository extends ServiceEntityRepository
         parent::__construct($registry, File::class);
     }
 
-    public function findByParams(string $sort, string  $order, int $count)
+    public function findUserFilesByMediaCategory(User|UserInterface $user, array $mediaCategory, array $conditions = [])
+    {
+        return RepositoryHelpers::addQueryBuilderConditions(
+            $this->createQueryBuilder("file"), $conditions
+        )
+            ->leftJoin("file.user", "user")
+            ->where("user = :user")
+            ->andWhere("file.media_category in (:mediaCategory)")
+            ->setParameter("user", $user)
+            ->setParameter("mediaCategory", $mediaCategory)
+            ->getQuery()->
+            getResult();
+    }
+
+    public function findByParams(string $sort, string $order, int $count)
     {
         $query = $this->createQueryBuilder('fs')
-            ->addOrderBy('fs.'.$sort, $order);
+            ->addOrderBy('fs.' . $sort, $order);
         if ($count !== null && $count > 0) {
             $query->setMaxResults($count);
         }
         return $query->getQuery()
-            ->getResult()
-            ;
+            ->getResult();
     }
 
     public function findByQuery($query)
@@ -50,7 +66,8 @@ class FileRepository extends ServiceEntityRepository
         return $file;
     }
 
-    public function deleteFile(File $fileSystemItem) {
+    public function deleteFile(File $fileSystemItem)
+    {
         $entityManager = $this->getEntityManager();
         $entityManager->remove($fileSystemItem);
         $entityManager->flush();

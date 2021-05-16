@@ -4,6 +4,7 @@ namespace App\DataFixtures;
 
 use App\Entity\Country;
 use App\Entity\FileSystem;
+use App\Entity\MediaCollection;
 use App\Entity\Membership;
 use App\Entity\User;
 use App\Entity\UserMembership;
@@ -29,6 +30,11 @@ use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 
 class UserFixtures extends Fixture
 {
+    const MEDIA_COLLECTIONS = [
+        "playlist" => "Playlist",
+        "album" => "Album",
+    ];
+
     const MEMBERSHIPS = [
         "free_membership" => "Free Membership",
         "bronze_membership" => "Bronze Membership",
@@ -84,6 +90,14 @@ class UserFixtures extends Fixture
 
         $countryRepo = $manager->getRepository(Country::class);
         $countriesArray = $countryRepo->findByParamsArray();
+
+        foreach (self::MEDIA_COLLECTIONS as $name => $label) {
+            $membershipModel = new MediaCollection();
+            $membershipModel->setDisplayName($label);
+            $membershipModel->setName($name);
+            $manager->persist($membershipModel);
+        }
+        $manager->flush();
 
         foreach (self::MEMBERSHIPS as $name => $label) {
             $membershipModel = new Membership();

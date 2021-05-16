@@ -31,40 +31,21 @@ class LocalTempUploadService extends FileSystemServiceBase
         $this->tempDir = $tempDir;
     }
 
-    public function moveToTempDir(UploadedFile $uploadedFile, string $fileName, string $ext): array|bool
+    public function moveToTempDir(UploadedFile $uploadedFile, string $filePath): array|bool
     {
         $filesystem = new Filesystem();
-        $copyToPath = $this->tempDir . "/" . $fileName . $ext;
+        $tempPath =  $this->tempDir . $filePath;
         try {
-            $filesystem->copy($uploadedFile->getRealPath(), $copyToPath);
-            return [
-                "path" => $copyToPath,
-                "filename" => $fileName,
-                "full_filename" => $fileName . $ext,
-                "ext" => $ext,
-                "mime_type" => $uploadedFile->getMimeType(),
-                "file_size" => $uploadedFile->getSize(),
-            ];
+            $filesystem->copy($uploadedFile->getRealPath(), $tempPath);
+            if (!$this->localTempFilesystem->fileExists($filePath)) {
+                return false;
+            }
+            return $tempPath;
         } catch (IOExceptionInterface $exception) {
-            echo "An error occurred while creating your directory at ".$exception->getPath();
-            return false;
+            throw new BadRequestHttpException($exception->getMessage());
+        } catch (FilesystemException $e) {
+            throw new BadRequestHttpException($e->getMessage());
         }
-    }
-
-    public function saveUploadTempFileToDatabase(string $fileName, string $fileType, string $ext ) {
-//        $saveToDatabase = $this->fileSystemService->createFile([
-//            "file_name" => $fileName,
-//            "file_path" => $fileName,
-//            "file_type" => $fileType,
-//            "file_extension" => $ext,
-//            "mime_type" => $this->uploadTempFilesystem->getMimetype( $fileName ),
-//            "file_size" => $this->uploadTempFilesystem->getSize( $fileName ),
-//            "file_system" => self::FILE_SYSTEM_NAME,
-//        ]);
-//        if (!$saveToDatabase || $saveToDatabase === null) {
-//            return false;
-//        }
-//        return $saveToDatabase;
     }
 
     public function readTempFile($filePath): string

@@ -4,13 +4,6 @@ oneup_flysystem:
         local_public_adapter:
             local:
                 location: '%kernel.project_dir%/var/public'
-#                visibilityConverter:
-#                    file:
-#                        public: 0777
-#                        private: 0700
-#                    dir:
-#                        public: 0777
-#                        private: 0700
 
         local_temp_adapter:
             local:

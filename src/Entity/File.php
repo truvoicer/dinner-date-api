@@ -19,76 +19,77 @@ class File
      * @ORM\Id()
      * @ORM\GeneratedValue()
      * @ORM\Column(type="integer")
-     * @Groups({"members_list", "full_user"})
+     * @Groups({"members_list", "full_user", "full_media"})
      */
     private $id;
 
     /**
      * @Groups({"main"})
      * @ORM\Column(type="string", length=255)
-     * @Groups({"members_list", "full_user"})
+     * @Groups({"members_list", "full_user", "full_media"})
      */
     private $media_category;
 
     /**
      * @Groups({"main"})
      * @ORM\Column(type="string", length=255)
-     * @Groups({"members_list", "full_user"})
+     * @Groups({"members_list", "full_user", "full_media"})
      */
     private $media_type;
 
     /**
      * @Groups({"main"})
      * @ORM\Column(type="string", length=255)
-     * @Groups({"members_list", "full_user"})
+     * @Groups({"members_list", "full_user", "full_media"})
      */
     private $filename;
 
     /**
      * @Groups({"main"})
      * @ORM\Column(type="string", length=512)
+     * @Groups({"members_list", "full_user", "full_media", "full_media"})
      */
-    private $temp_path;
+    private $path;
     
     /**
      * @Groups({"main"})
      * @ORM\Column(type="string", length=255)
-     * @Groups({"members_list", "full_user"})
+     * @Groups({"members_list", "full_user", "full_media"})
      */
     private $extension;
 
     /**
      * @Groups({"main"})
      * @ORM\Column(type="string", length=255)
-     * @Groups({"members_list", "full_user"})
+     * @Groups({"members_list", "full_user", "full_media"})
      */
     private $fileType;
 
     /**
      * @Groups({"main"})
      * @ORM\Column(type="integer")
-     * @Groups({"members_list", "full_user"})
+     * @Groups({"members_list", "full_user", "full_media"})
      */
     private $file_size;
 
     /**
      * @Groups({"main"})
      * @ORM\Column(type="datetime")
-     * @Groups({"members_list", "full_user"})
+     * @Groups({"members_list", "full_user", "full_media"})
      */
     private $date_updated;
 
     /**
      * @Groups({"main"})
      * @ORM\Column(type="datetime")
-     * @Groups({"members_list", "full_user"})
+     * @Groups({"members_list", "full_user", "full_media"})
      */
     private $date_created;
 
     /**
      * @Groups({"main"})
      * @ORM\Column(type="string", length=255, nullable=true)
-     * @Groups({"members_list", "full_user"})
+     * @Groups({"members_list", "full_user", "full_media"})
      */
     private $mime_type;
 
@@ -111,9 +112,14 @@ class File
     private $user;
 
     /**
-     * @Groups({"members_list", "full_user"})
+     * @Groups({"members_list", "full_user", "full_media"})
      */
     private $public_url;
+
+    /**
+     * @ORM\ManyToMany(targetEntity=UserMediaCollection::class, mappedBy="file")
+     */
+    private $userMediaCollections;
 
     /**
      * @return mixed
@@ -126,12 +132,13 @@ class File
 //            default:
 //                return sprintf("%s/%s%s", $this->getFileSystem()->getBaseUrl(), $this->getFilename(), $this->getExtension());
 //        }
-         return sprintf("%s/%s%s", $this->getFileSystem()->getBaseUrl(), $this->getFilename(), $this->getExtension());
+         return sprintf("%s%s", $this->getFileSystem()->getBaseUrl(), $this->getPath());
     }
 
     public function __construct()
     {
         $this->fileDownloads = new ArrayCollection();
+        $this->userMediaCollections = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -254,14 +261,14 @@ class File
         return $this;
     }
 
-    public function getTempPath(): ?string
+    public function getPath(): ?string
     {
-        return $this->temp_path;
+        return $this->path;
     }
 
-    public function setTempPath(string $temp_path): self
+    public function setPath(string $path): self
     {
-        $this->temp_path = $temp_path;
+        $this->path = $path;
 
         return $this;
     }
@@ -310,6 +317,33 @@ class File
     public function setUser(?User $user): self
     {
         $this->user = $user;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection|UserMediaCollection[]
+     */
+    public function getUserMediaCollections(): Collection
+    {
+        return $this->userMediaCollections;
+    }
+
+    public function addUserMediaCollection(UserMediaCollection $userMediaCollection): self
+    {
+        if (!$this->userMediaCollections->contains($userMediaCollection)) {
+            $this->userMediaCollections[] = $userMediaCollection;
+            $userMediaCollection->addFile($this);
+        }
+
+        return $this;
+    }
+
+    public function removeUserMediaCollection(UserMediaCollection $userMediaCollection): self
+    {
+        if ($this->userMediaCollections->removeElement($userMediaCollection)) {
+            $userMediaCollection->removeFile($this);
+        }
 
         return $this;
     }
