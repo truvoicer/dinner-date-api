@@ -6,8 +6,11 @@ use App\Entity\MediaCollection;
 use App\Entity\User;
 use App\Entity\UserMediaCollection;
 use App\Repository\Helpers\RepositoryHelpers;
+use App\Service\Tools\UtilsService;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
  * @method UserMediaCollection|null find($id, $lockMode = null, $lockVersion = null)
@@ -25,20 +28,45 @@ class UserMediaCollectionRepository extends ServiceEntityRepository
     public function getUserMediaCollectionObject(
         UserMediaCollection $userMediaCollection,
         User $user,
-        MediaCollection $mediaCollection,
-        ?string $name,
-        ?string $label,
-        array $files
+        array $data
     )
     {
-        if (isset($name)) {
-            $userMediaCollection->setName($name);
+        foreach ($data as $key => $value) {
+            $setMethodName = sprintf("set%s", UtilsService::stringToCamelCase($key, true));
+            if (method_exists($userMediaCollection, $setMethodName)) {
+                if ($key === "name") {
+                    $value = UtilsService::stringToSnakeCase($value);
+                }
+                if ($key === "files") {
+                    $this->addFilesToMediaCollection($userMediaCollection, $value);
+                    continue;
+                }
+                if ($key === "media_collection") {
+                    $value = $this->getEntityManager()->getRepository(UserMediaCollection::class)->find($value);
+                    if ($value === null) {
+                        throw new BadRequestHttpException("Media collection [$value] not found.");
+                    }
+                }
+                $userMediaCollection->$setMethodName($value);
+            }
         }
-        if (isset($label)) {
-            $userMediaCollection->setLabel($label);
+        if (isset($data["collection_name"])) {
+            $value = $this->getEntityManager()->getRepository(MediaCollection::class)->findOneBy(["name" => $data["collection_name"]]);
+            if ($value === null) {
+                throw new BadRequestHttpException(sprintf("Media collection [%s] not found.", $data["collection_name"]));
+            }
+            $userMediaCollection->setMediaCollection($value);
+        }
+
+        if (isset($data["name"])) {
+            $userMediaCollection->setLabel($data["name"]);
         }
         $userMediaCollection->setUser($user);
-        $userMediaCollection->setMediaCollection($mediaCollection);
+        return $userMediaCollection;
+    }
+
+    public function addFilesToMediaCollection(UserMediaCollection $userMediaCollection, array $files = [])
+    {
         foreach ($files as $file) {
             $userMediaCollection->addFile($file);
         }
@@ -59,12 +87,34 @@ class UserMediaCollectionRepository extends ServiceEntityRepository
         return $userMediaCollection;
     }
 
+    public function deleteUserMediaCollectionById(int $id)
+    {
+        $userMediaCollection = $this->find($id);
+        if ($userMediaCollection === null) {
+            return false;
+        }
+        return $this->deleteUserMediaCollection($userMediaCollection);
+    }
+
     public function deleteUserMediaCollection(UserMediaCollection $userMediaCollection)
     {
         $entityManager = $this->getEntityManager();
         $entityManager->remove($userMediaCollection);
         $entityManager->flush();
-        return $userMediaCollection;
+        return true;
+    }
+
+    public function getUserMediaCollectionsByCollection(User|UserInterface $user, string $collection, array $conditions = [])
+    {
+        $query = $this->createQueryBuilder("umc")
+            ->leftJoin("umc.media_collection", "media_collection")
+            ->where("umc.user = :user")
+            ->andWhere("media_collection.name = :collection")
+            ->setParameter("user", $user)
+            ->setParameter("collection", $collection);
+        return RepositoryHelpers::addQueryBuilderConditions($query, $conditions)
+            ->getQuery()
+            ->getResult();
     }
 
     public function findByParams(array $conditions = [])

@@ -39,14 +39,7 @@ class BaseController extends AbstractController
      */
     protected function jsonResponseSuccess($message, $data = [])
     {
-        $responseData = [
-            // you may want to customize or obfuscate the message first
-            'status' => "success",
-            'message' => $message,
-            "data" => $data
-        ];
-
-        return new JsonResponse($responseData, Response::HTTP_OK);
+        return HttpRequestService::jsonResponseSuccess($message, $data);
     }
 
     /**
@@ -59,13 +52,6 @@ class BaseController extends AbstractController
      */
     protected function jsonResponseFail($message, $data = [])
     {
-        $responseData = [
-            // you may want to customize or obfuscate the message first
-            'status' => "error",
-            'message' => $message,
-            "data" => $data
-        ];
-
-        return new JsonResponse($responseData, Response::HTTP_BAD_REQUEST);
+        return HttpRequestService::jsonResponseFail($message, $data);
     }
 }

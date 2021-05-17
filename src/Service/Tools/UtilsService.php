@@ -21,6 +21,11 @@ class UtilsService
         return $str;
     }
 
+    public static function stringToSnakeCase($string)
+    {
+        return strtolower(preg_replace('/(?<!^)[A-Z]/', '_$0', $string));
+    }
+
     public static function checkArrayField(string $field, array $array = []) {
         if (array_key_exists($field, $array)) {
             return $array[$field];

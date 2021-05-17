@@ -46,6 +46,9 @@ class GoogleAuthService extends BaseService
             AuthProviderService::AUTH_ACCESS_TOKEN => $this->requestData["id_token"],
             AuthProviderService::AUTH_EXPIRES_AT => $ticket["exp"],
             AuthProviderService::AUTH_EMAIL => $ticket["email"],
+            AuthProviderService::AUTH_FIRST_NAME => $this->requestData["givenName"],
+            AuthProviderService::AUTH_LAST_NAME => $this->requestData["familyName"],
+            AuthProviderService::AUTH_PROFILE_PIC_URL => "",
         ];
     }
 }
