@@ -54,16 +54,15 @@ class MediaCollectionController extends BaseController
     /**
      * Gets a single user based on the id in the request url
      *
-     * @Route("/list", methods={"GET"})
+     * @Route("/{name}/list", methods={"GET"})
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
-    public function fetchUserMediaCollections()
+    public function fetchUserMediaCollections(MediaCollection $mediaCollection)
     {
-        $this->publicMediaInterface->setUser($this->getUser());
         return $this->jsonResponseSuccess(
             "Media fetch.",
             $this->serializerService->entityToArray(
-                $this->publicMediaInterface->mediaFetchHandler(),
+                $this->mediaService->getUserMediaCollectionsByCollection($this->getUser(), $mediaCollection),
                 ["full_media"]
             )
         );
@@ -90,7 +89,7 @@ class MediaCollectionController extends BaseController
         return $this->jsonResponseSuccess(
             "Created media collection",
             $this->serializerService->entityToArray(
-                $this->mediaService->getUserMediaCollectionsByCollection($this->getUser(), $validate["collection_name"]),
+                $this->mediaService->getUserMediaCollectionsByCollectionName($this->getUser(), $validate["collection_name"]),
                 ["full_media"]
             )
         );

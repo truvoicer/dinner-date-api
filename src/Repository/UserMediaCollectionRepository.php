@@ -104,7 +104,7 @@ class UserMediaCollectionRepository extends ServiceEntityRepository
         return true;
     }
 
-    public function getUserMediaCollectionsByCollection(User|UserInterface $user, string $collection, array $conditions = [])
+    public function getUserMediaCollectionsByCollectionName(User|UserInterface $user, string $collection, array $conditions = [])
     {
         $query = $this->createQueryBuilder("umc")
             ->leftJoin("umc.media_collection", "media_collection")
@@ -112,6 +112,19 @@ class UserMediaCollectionRepository extends ServiceEntityRepository
             ->andWhere("media_collection.name = :collection")
             ->setParameter("user", $user)
             ->setParameter("collection", $collection);
+        return RepositoryHelpers::addQueryBuilderConditions($query, $conditions)
+            ->getQuery()
+            ->getResult();
+    }
+
+    public function getUserMediaCollectionsByCollection(User|UserInterface $user, MediaCollection $mediaCollection, array $conditions = [])
+    {
+        $query = $this->createQueryBuilder("umc")
+            ->leftJoin("umc.media_collection", "media_collection")
+            ->where("umc.user = :user")
+            ->andWhere("media_collection = :media_collection")
+            ->setParameter("user", $user)
+            ->setParameter("media_collection", $mediaCollection);
         return RepositoryHelpers::addQueryBuilderConditions($query, $conditions)
             ->getQuery()
             ->getResult();

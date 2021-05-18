@@ -25,7 +25,10 @@ class MediaService extends UserService
         $this->userMediaCollectionRepository = $entityManager->getRepository(UserMediaCollection::class);
     }
 
-    public function getUserMediaCollectionsByCollection(User|UserInterface $user, string $collection, array $condition = []) {
+    public function getUserMediaCollectionsByCollectionName(User|UserInterface $user, string $collection, array $condition = []) {
+        return $this->userMediaCollectionRepository->getUserMediaCollectionsByCollectionName($user, $collection, $condition);
+    }
+    public function getUserMediaCollectionsByCollection(User|UserInterface $user, MediaCollection $collection, array $condition = []) {
         return $this->userMediaCollectionRepository->getUserMediaCollectionsByCollection($user, $collection, $condition);
     }
 
