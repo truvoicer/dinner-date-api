@@ -71,6 +71,23 @@ class MediaCollectionController extends BaseController
     /**
      * Gets a single user based on the id in the request url
      *
+     * @Route("/{name}/file/list", methods={"GET"})
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     */
+    public function fetchUserMediaCollectionFiles(User $user, UserMediaCollection $userMediaCollection)
+    {
+        if ($this->getUser() !== $user) {
+            return $this->jsonResponseFail("Action not allowed.");
+        }
+        return $this->jsonResponseSuccess(
+            "Media fetch.",
+            $this->serializerService->entityToArray($userMediaCollection, ["full_media"])
+        );
+    }
+
+    /**
+     * Gets a single user based on the id in the request url
+     *
      * @Route("/create", methods={"POST"})
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
