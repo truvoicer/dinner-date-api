@@ -35,11 +35,7 @@ class UserMediaCollectionRepository extends ServiceEntityRepository
             $setMethodName = sprintf("set%s", UtilsService::stringToCamelCase($key, true));
             if (method_exists($userMediaCollection, $setMethodName)) {
                 if ($key === "name") {
-                    $value = UtilsService::stringToSnakeCase($value);
-                }
-                if ($key === "files") {
-                    $this->addFilesToMediaCollection($userMediaCollection, $value);
-                    continue;
+                    $value = UtilsService::labelToName($value);
                 }
                 if ($key === "media_collection") {
                     $value = $this->getEntityManager()->getRepository(UserMediaCollection::class)->find($value);
@@ -49,6 +45,9 @@ class UserMediaCollectionRepository extends ServiceEntityRepository
                 }
                 $userMediaCollection->$setMethodName($value);
             }
+        }
+        if (isset($data["files"])) {
+            $this->addFilesToMediaCollection($userMediaCollection, $data["files"]);
         }
         if (isset($data["collection_name"])) {
             $value = $this->getEntityManager()->getRepository(MediaCollection::class)->findOneBy(["name" => $data["collection_name"]]);

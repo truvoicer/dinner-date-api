@@ -152,4 +152,25 @@ class MediaCollectionController extends BaseController
             []
         );
     }
+
+    /**
+     * Gets a single user based on the id in the request url
+     *
+     * @Route("/{userMediaCollection}/file/add", methods={"POST"})
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     */
+    public function userMediaCollectionFileAdd(UserMediaCollection $userMediaCollection, Request $request)
+    {
+        return $this->jsonResponseSuccess(
+            "Updated media collection.",
+            $this->serializerService->entityToArray(
+                $this->mediaService->addUserMediaCollectionFile(
+                    $userMediaCollection,
+                    $this->getUser(),
+                    HttpRequestService::getRequestData($request, true)
+                ),
+                ["full_media"]
+            )
+        );
+    }
 }

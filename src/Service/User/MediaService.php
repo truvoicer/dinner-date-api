@@ -2,11 +2,14 @@
 
 namespace App\Service\User;
 
+use App\Entity\File;
 use App\Entity\MediaCollection;
 use App\Entity\User;
 use App\Entity\UserMediaCollection;
+use App\Repository\FileRepository;
 use App\Repository\MediaCollectionRepository;
 use App\Repository\UserMediaCollectionRepository;
+use App\Service\Tools\FileSystem\FileSystemCrudService;
 use App\Service\Tools\HttpRequestService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -17,12 +20,19 @@ class MediaService extends UserService
 {
     protected MediaCollectionRepository $mediaCollectionRepository;
     protected UserMediaCollectionRepository $userMediaCollectionRepository;
+    protected FileRepository $fileRepository;
 
-    public function __construct(EntityManagerInterface $entityManager, HttpRequestService $httpRequestService, TokenStorageInterface $tokenStorage)
+    public function __construct(
+        EntityManagerInterface $entityManager,
+        HttpRequestService $httpRequestService,
+        TokenStorageInterface $tokenStorage,
+    )
     {
         parent::__construct($entityManager, $httpRequestService, $tokenStorage);
         $this->mediaCollectionRepository = $entityManager->getRepository(MediaCollection::class);
         $this->userMediaCollectionRepository = $entityManager->getRepository(UserMediaCollection::class);
+        $this->fileRepository = $entityManager->getRepository(File::class);
+
     }
 
     public function getUserMediaCollectionsByCollectionName(User|UserInterface $user, string $collection, array $condition = []) {
@@ -82,6 +92,18 @@ class MediaService extends UserService
             return $this->userMediaCollectionRepository->updateUserMediaCollection($userCollectionObject);
         }
         return false;
+    }
+
+    public function addUserMediaCollectionFile(UserMediaCollection $userMediaCollection, User|UserInterface $user, array $data)
+    {
+        if (!isset($data["files"]) || !is_array($data["files"]) || count($data["files"]) === 0) {
+            throw new BadRequestHttpException("Files not in request or invalid.");
+        }
+        $files = [];
+        $files["files"] = array_map(function ($fileId) {
+            return $this->fileRepository->find((int)$fileId);
+        }, $data["files"]);
+        return $this->updateUserMediaCollection($userMediaCollection, $user, $files);
     }
 
     public function deleteUserMediaCollectionById(int $id)
