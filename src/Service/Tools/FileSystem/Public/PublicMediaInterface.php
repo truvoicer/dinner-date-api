@@ -85,11 +85,17 @@ class PublicMediaInterface
 
     protected function s3PublicMediaDeleteHandler()
     {
-        $file = $this->fileSystemCrudService->getFileById($this->requestData["file_id"]);
-        if (!$this->s3PublicUploadService->deleteFileFromS3($file->getPath())) {
-            return false;
+        $fileId = $this->requestData["file_id"];
+        if (!is_array($fileId)) {
+            $fileId = [$fileId];
         }
-        return $this->fileSystemCrudService->deleteFile($file);
+        return array_map(function ($id) {
+            $file = $this->fileSystemCrudService->getFileById($id);
+            if (!$this->s3PublicUploadService->deleteFileFromS3($file->getPath())) {
+                return false;
+            }
+            return $this->fileSystemCrudService->deleteFile($file);
+        }, $fileId);
     }
 
     protected function s3PublicMediaImageUploadHandler()

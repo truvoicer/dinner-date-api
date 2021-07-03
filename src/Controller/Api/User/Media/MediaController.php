@@ -110,14 +110,12 @@ class MediaController extends BaseController
     public function deletePublicMedia()
     {
         $this->publicMediaInterface->setUser($this->getUser());
-        $delete = $this->publicMediaInterface->mediaDeleteHandler();
-        if(!$delete) {
-            return $this->jsonResponseFail(
-                "Error deleting profile picture, try again."
-            );
-        }
         return $this->jsonResponseSuccess(
-            "Successfully deleted profile picture."
+            "Successfully deleted profile picture.",
+            $this->serializerService->entityArrayToArray(
+                $this->publicMediaInterface->mediaDeleteHandler(),
+                ["members_list"]
+            )
         );
     }
 
